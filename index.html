@@ -280,7 +280,7 @@ function renderCustom(){
       <div><b>Type de demande</b><div class="chips" style="margin-top:6px">${KINDS.map((k,i)=>`<label><input type="radio" name="kind" value="${k}" ${i?"":"checked"}><span>${k}</span></label>`).join("")}</div></div>
       <div id="ironBox" hidden style="display:grid;gap:12px">
         <label>Nombre d'étages *<span>Combien d'étages pour ta ferme à fer ?</span><input id="cfloors" type="number" min="1" max="50" inputmode="numeric" placeholder="Ex. 3"></label>
-        <p class="note" style="margin:0;padding:10px 12px;border-radius:10px;border:2px dashed var(--red);color:var(--ink)"><b>Important :</b> les villageois ne sont pas fournis. Tu dois les apporter toi-même.</p>
+        <p class="note" style="margin:0;padding:10px 12px;border-radius:10px;border:2px dashed var(--red);color:var(--ink)"><b>Important :</b> la ferme est construite sur le serveur Omega. Les villageois ne sont pas fournis, tu dois les apporter toi-même.</p>
       </div>
       <label id="descLab">Ta demande *<span>Ressources, blocs, quantités… plus c'est précis, plus le devis est juste</span><textarea id="cdesc" maxlength="800" placeholder="Ex. 20 shulkers de terracotta orange, 10 shulkers de quartz"></textarea></label>
       <div class="row2"><label>Quantité ou taille<input id="cqty" maxlength="60" placeholder="Ex. 20 shulkers"></label>
@@ -291,15 +291,15 @@ function renderCustom(){
   const isIron=()=>document.querySelector('input[name=kind]:checked').value==="Ferme à fer";
   const syncKind=()=>{const on=isIron();$("ironBox").hidden=!on;$("ironBox").style.display=on?"grid":"none";
     $("descLab").firstChild.textContent=on?"Précisions ":"Ta demande * ";
-    $("descLab").querySelector("span").textContent=on?"Indique le serveur, le délai souhaité et les coordonnées de l'emplacement":"Ressources, blocs, quantités… plus c'est précis, plus le devis est juste";
-    $("cdesc").placeholder=on?"Ex. Serveur Tropi 2, d'ici une semaine, x 1200 / z -340":"Ex. 20 shulkers de terracotta orange, 10 shulkers de quartz";$("cqty").closest("label").style.display=on?"none":""};
+    $("descLab").querySelector("span").textContent=on?"Indique le délai souhaité et les coordonnées de l'emplacement sur Omega":"Ressources, blocs, quantités… plus c'est précis, plus le devis est juste";
+    $("cdesc").placeholder=on?"Ex. d'ici une semaine, x 1200 / z -340":"Ex. 20 shulkers de terracotta orange, 10 shulkers de quartz";$("cqty").closest("label").style.display=on?"none":""};
   $("cform").addEventListener("change",e=>{if(e.target.name==="kind")syncKind()});syncKind();
   $("cform").addEventListener("submit",e=>{
     e.preventDefault();const d=$("cdesc").value.trim();
     if(isIron()){
       const n=parseInt($("cfloors").value,10);
       if(!(n>=1&&n<=50)){sfx("err");const m=$("cmsg");m.className="msg show err";m.textContent="Indique le nombre d'étages de ta ferme à fer.";return}
-      customs.push({kind:"Ferme à fer",desc:(d?d+" — ":"")+"Villageois non fournis",qty:n+(n>1?" étages":" étage"),budget:$("cbud").value.trim()});
+      customs.push({kind:"Ferme à fer",desc:"Serveur Omega — "+(d?d+" — ":"")+"Villageois non fournis",qty:n+(n>1?" étages":" étage"),budget:$("cbud").value.trim()});
       store.set("tt_custom",customs);renderCustom();renderRecap();sfx("add");
       const m=$("cmsg");m.className="msg show ok";m.textContent="Ferme à fer ajoutée. Complète ton pseudo Tropimon plus bas et envoie la commande.";return;
     }
