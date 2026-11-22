@@ -137,39 +137,46 @@ for(let dy=-88;dy<=88;dy+=8){const w=Math.round(Math.sqrt(88*88-dy*dy)/8)*8;r(94
 [[120,90,1],[420,150,.8],[760,70,1.2],[1040,170,.7]].forEach(([x,y,k])=>{const c="#fff3e3";r(x,y,160*k,24,c);r(x+24*k,y-16,96*k,16,c);r(x+48*k,y-32,40*k,16,c);r(x-16,y+24,200*k,8,"#ffd7c0")});
 /* oiseaux */
 [[560,120],[600,100],[640,130]].forEach(([x,y])=>{r(x,y,8,8,"#4a2b3a");r(x+8,y+8,8,8,"#4a2b3a");r(x+16,y,8,8,"#4a2b3a")});
-/* îlots lointains */
-[[40,384,220],[300,392,140]].forEach(([x,y,w])=>{for(let i=0;i<5;i++)r(x+i*16,y-i*8,w-i*32,8+i*8,"#c9706a")});
-/* mer */
-r(0,400,1200,200,"#2b97c6");r(0,460,1200,140,"#2382b3");r(0,530,1200,70,"#1a6a98");r(0,400,1200,8,"#8fd9f2");
-for(let i=0;i<9;i++){const w=140-i*14;r(940-w/2,408+i*12,w,6,"#ffe9a0",'opacity=".75"')}
-let wv="";for(let i=0;i<40;i++){const x=(i*173)%1200,y=420+((i*61)%170);wv+=`<rect x="${x}" y="${y}" width="${24+(i%3)*16}" height="6" fill="#9be0f5" opacity=".7"/>`}
-o+=`<g class="wave">${wv}</g>`;
-/* île */
-const cx=900,cy=500;r(cx-300,cy+8,600,16,"#e9f8ff");
-for(let dy=-56;dy<=24;dy+=8){const w=Math.round(Math.sqrt(1-(dy*dy)/(64*64))*300/8)*8;r(cx-w,cy+dy,w*2,8,dy<-40?"#ffe7ad":dy>8?"#e2b66a":"#f6d18a")}
-/* palmiers */
-const palm=(x,dir)=>{for(let i=0;i<12;i++)r(x+dir*Math.round(i*i/14)*8,cy-56-i*16,16,16,i%2?"#6b3f1d":"#7d4c24");const tx=x+dir*Math.round(121/14)*8+8,ty=cy-56-192;
-[[-1,1],[1,1],[-1,2.2],[1,2.2],[-1,.3],[1,.3]].forEach(([a,d])=>{for(let k=0;k<8;k++){const x=tx+a*k*12-8,y=ty+Math.round(d*k*k*.9/4)*4-(d<1?k*4:0);r(x,y,20,12,"#24804a");r(x,y,20,4,"#3fbf6a")}});
-for(let k=0;k<3;k++)r(tx-12+k*8,ty-12-k*4,16,16,"#2f9e5a");r(tx-8,ty+4,16,16,"#6b3f1d");r(tx+4,ty+12,12,12,"#5b3518")};
-palm(668,1);palm(1130,-1);
-/* échoppe TropiTaffs */
-const sx=800,sy=330;
-r(sx+8,sy+40,12,120,"#7d4c24");r(sx+164,sy+40,12,120,"#7d4c24");
-for(let i=0;i<8;i++)r(sx-8+i*25,sy+8,25,40,i%2?"#fff":"#e3352f");
-for(let i=0;i<8;i++)r(sx-8+i*25,sy+48,25,10,i%2?"#e3352f":"#fff");
-r(sx-8,sy+8,200,4,"#1b1f2a");r(sx-8,sy+58,200,4,"#1b1f2a");
-r(sx+60,sy-16,64,26,"#fff6e0");r(sx+60,sy-16,64,26,"none",'stroke="#1b1f2a" stroke-width="4"');
-o+=`<text x="${sx+92}" y="${sy+4}" text-anchor="middle" font-family="'Press Start 2P',monospace" font-size="13" fill="#e3352f">TT</text>`;
-r(sx,sy+110,184,14,"#c98b4f");r(sx,sy+124,184,42,"#a86d36");r(sx,sy+110,184,56,"none",'stroke="#1b1f2a" stroke-width="4"');
-for(let i=0;i<4;i++)r(sx+12+i*44,sy+132,32,4,"#8a5428");
-/* marchandises sur le comptoir */
-r(sx+20,sy+86,28,24,"#f2d98c");r(sx+20,sy+86,28,6,"#ffe9a8");
-r(sx+60,sy+80,24,30,"#bfe6f5",'opacity=".9"');r(sx+64,sy+84,6,18,"#fff");
-r(sx+100,sy+90,40,20,"#cfd4dc");r(sx+100,sy+90,40,5,"#eef1f5");
-r(sx+148,sy+92,20,18,"#ffcf3a");
-o+=`<g class="bob"><rect x="${sx+196}" y="${sy+20}" width="34" height="26" fill="#fff" stroke="#1b1f2a" stroke-width="4"/><text x="${sx+213}" y="${sy+40}" text-anchor="middle" font-family="Nunito,sans-serif" font-weight="900" font-size="18" fill="#e3352f">$</text></g>`;
-/* shulker */
-r(1010,452,48,48,"#fff");r(1010,452,48,22,"#e3352f");r(1010,452,48,48,"none",'stroke="#1b1f2a" stroke-width="4"');r(1026,476,16,8,"#1b1f2a");
+/* ville lointaine */
+[[0,380,90],[100,350,70],[180,395,120],[310,365,80],[400,400,140],[560,375,90]].forEach(([x,y,w])=>{r(x,y,w,480-y,"#c9706a");for(let wy=y+16;wy<460;wy+=24)for(let wx=x+12;wx<x+w-12;wx+=24)r(wx,wy,8,10,"#e0948a")});
+/* sol */
+r(0,470,1200,130,"#8a5a33");r(0,470,1200,10,"#5fb04a");r(0,480,1200,4,"#4a8f3a");
+for(let i=0;i<70;i++){const x=(i*157)%1200,y=492+((i*53)%100);r(x,y,8,8,i%3?"#74471f":"#9a6538")}
+/* immeuble en construction */
+const bx=740,bw=280,fl=58,base=470;
+for(let f=0;f<5;f++){const y=base-(f+1)*fl;
+  if(f<3){r(bx,y,bw,fl,"#b5523b");for(let k=0;k<bw;k+=16)r(bx+k+((f%2)*8),y+8,8,2,"#9c4431");
+    for(let wx=bx+22;wx<bx+bw-30;wx+=56){r(wx,y+16,30,26,"#1b1f2a");r(wx+4,y+20,22,18,"#8fd9f2");r(wx+4,y+20,8,18,"#bfeaf8")}}
+  r(bx-6,y,bw+12,10,"#9aa3ad");r(bx-6,y,bw+12,3,"#c3cad1");
+  for(let c=0;c<=4;c++)r(bx+c*(bw-14)/4,y,14,fl,"#8a939c");}
+r(bx-6,base-5*fl-10,bw+12,10,"#9aa3ad");
+/* échafaudage */
+for(let k=0;k<4;k++)r(bx-60+k*0,base-4*fl,0,0,"#000");
+for(const px of [bx-56,bx-20])r(px,base-4*fl,6,4*fl,"#c98b2b");
+for(let f=1;f<=4;f++){r(bx-60,base-f*fl,60,6,"#8a5a28");r(bx-60,base-f*fl+6,60,3,"#6b431c")}
+for(let f=0;f<4;f++)for(let d=0;d<5;d++)r(bx-54+d*8,base-(f+1)*fl+10+d*9,8,6,"#c98b2b");
+/* grue */
+const gx=1110,top=150;
+for(let y=top;y<base;y+=16){r(gx,y,28,16,"#f2b705");r(gx+4,y+4,20,8,"#1b1f2a");r(gx+((y/16)%2?4:12),y+4,12,8,"#f2b705")}
+r(gx-20,base-12,68,12,"#6b6f78");
+r(560,top,640,20,"#f2b705");for(let x=564;x<1196;x+=20){r(x,top+4,12,12,"#1b1f2a");r(x+((x/20)%2?0:6),top+6,6,8,"#f2b705")}
+r(1150,top+20,48,36,"#6b6f78");r(1150,top+20,48,6,"#8a8f99");
+r(gx-8,top-40,44,40,"#f2b705");r(gx-2,top-34,32,20,"#8fd9f2");r(gx+12,top-66,4,26,"#f2b705");
+r(gx+4,top+20,20,24,"#e3352f");
+o+=`<g class="bob"><rect x="700" y="${top+20}" width="4" height="120" fill="#1b1f2a"/><rect x="694" y="${top+136}" width="16" height="8" fill="#4a4f58"/>
+<rect x="672" y="${top+144}" width="60" height="44" fill="#fff" stroke="#1b1f2a" stroke-width="4"/><rect x="672" y="${top+144}" width="60" height="20" fill="#e3352f" stroke="#1b1f2a" stroke-width="4"/><rect x="694" y="${top+172}" width="16" height="6" fill="#1b1f2a"/></g>`;
+/* barrière de chantier */
+for(const px of [630,830,1030])r(px,488,10,60,"#6b6f78");
+for(let x=620;x<1200;x+=40){r(x,496,20,18,"#f2b705");r(x+20,496,20,18,"#1b1f2a")}
+r(620,494,580,3,"#1b1f2a");r(620,514,580,3,"#1b1f2a");
+/* panneau TropiTaffs */
+r(610,400,150,64,"#fff");r(610,400,150,64,"none",'stroke="#1b1f2a" stroke-width="4"');r(610,400,150,18,"#e3352f");
+r(640,464,8,32,"#6b6f78");r(722,464,8,32,"#6b6f78");
+o+=`<text x="685" y="414" text-anchor="middle" font-family="'Press Start 2P',monospace" font-size="9" fill="#fff">CHANTIER</text><text x="685" y="448" text-anchor="middle" font-family="'Press Start 2P',monospace" font-size="12" fill="#1b1f2a">TROPITAFFS</text>`;
+/* plots */
+[[780,548],[900,560],[1060,548]].forEach(([x,y])=>{r(x+6,y-30,12,6,"#ff7a1a");r(x+4,y-24,16,6,"#fff");r(x+2,y-18,20,10,"#ff7a1a");r(x-2,y-8,28,8,"#e0610f")});
+/* pile de shulkers */
+[[960,430],[1004,430],[982,388]].forEach(([x,y])=>{r(x,y,40,40,"#fff");r(x,y,40,16,"#e3352f");r(x,y,40,40,"none",'stroke="#1b1f2a" stroke-width="4"');r(x+14,y+22,12,6,"#1b1f2a")});
 S.insertAdjacentHTML("beforeend",o);
 }
 </script>
