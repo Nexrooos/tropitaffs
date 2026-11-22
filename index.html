@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TropiTaffs Commandes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+/* VOICE: joyeux, aventure de dresseur, boutique de village sur une île tropicale
+   IDEA: le comptoir d'un Centre de commandes, comme un menu de jeu rétro
+   PICTURE: une île au coucher du soleil avec un plat de chunks en construction
+   COLOUR and TYPE: rouge capsule, crème, bleu lagon profond ; Press Start 2P + Nunito
+   LAYOUT: bandeau scène, catalogue en cartes, formulaire de commande en colonne avec récap collant */
+:root{color-scheme:light dark;
+--bg:light-dark(#fff7ea,#0e1a2b);--card:light-dark(#ffffff,#16263d);--ink:light-dark(#1b1f2a,#f3ecdf);
+--mute:light-dark(#5d6170,#a9b3c4);--red:#e3352f;--redd:#b8231e;--sea:light-dark(#0b5f86,#4fb3dc);
+--sand:light-dark(#ffe1a8,#2a3b55);--line:light-dark(#e9dcc4,#26395a);--ok:#1f9d55}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Nunito,system-ui,sans-serif;overflow-x:clip}
+.px{font-family:"Press Start 2P",monospace;letter-spacing:0;line-height:1.5}
+.band{padding:clamp(28px,4vw,64px) max(5vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+header{position:sticky;top:0;z-index:5;background:var(--red);color:#fff;border-bottom:4px solid #1b1f2a}
+header .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;padding:12px max(5vw,16px)}
+.logo{font-size:14px;display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none}
+nav{display:flex;flex-wrap:wrap;gap:4px 18px;margin-left:auto;font-weight:700}
+nav a{color:#fff;text-decoration:none;padding:6px 0}nav a:hover{text-decoration:underline}
+.hero{position:relative;min-height:clamp(480px,72vh,640px);background:#ff9d5c;color:#1b1f2a;overflow:hidden;border-bottom:6px solid #1b1f2a}
+.scene{position:absolute;inset:0;width:100%;height:100%;display:block;shape-rendering:crispEdges}
+.hero .wrap{position:relative;padding:clamp(32px,6vw,80px) max(5vw,16px)}
+.dialog{max-width:540px;background:#fff;border:4px solid #1b1f2a;border-radius:6px;box-shadow:inset 0 0 0 4px #fff,inset 0 0 0 7px #3b6fd8,0 8px 0 rgba(0,0,0,.35);padding:26px 26px 22px;position:relative}
+.dialog .tag{position:absolute;top:-18px;left:18px;background:var(--red);color:#fff;border:4px solid #1b1f2a;padding:6px 10px;font-size:10px}
+.hero h1{font-size:clamp(17px,2.3vw,26px);margin:6px 0 14px;text-wrap:balance}
+.hero p{font-size:17px;margin:0 0 20px;font-weight:700}
+.dialog .arrow{position:absolute;right:16px;bottom:10px;font-size:12px;color:var(--red)}
+@media(prefers-reduced-motion:no-preference){.dialog .arrow{animation:blink 1s steps(2) infinite}@keyframes blink{50%{opacity:0}}.wave{animation:wv 2.4s steps(4) infinite}@keyframes wv{50%{transform:translateX(16px)}}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:44px;padding:10px 20px;border:3px solid #1b1f2a;border-radius:10px;background:#fff;color:#1b1f2a;font:900 16px Nunito,sans-serif;cursor:pointer;box-shadow:0 4px 0 #1b1f2a;text-decoration:none}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #1b1f2a}
+.btn.discord{background:#5865f2;color:#fff}.btn.red{background:var(--red);color:#fff}
+.btn:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--sea);outline-offset:2px}
+.hero-cta{display:flex;flex-wrap:wrap;gap:12px}
+h2{font-size:clamp(14px,1.8vw,20px);margin:0 0 8px}
+.lead{color:var(--mute);margin:0 0 24px;max-width:70ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.card{background:var(--card);border:3px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.card h3{margin:0;font-size:18px}.card .price{font-weight:900;font-size:22px;color:var(--red);white-space:nowrap}
+.card small{color:var(--mute)}
+.qty{display:flex;align-items:center;gap:8px;margin-top:auto}
+.qty button{width:44px;height:44px;border-radius:10px;border:3px solid #1b1f2a;background:var(--sand);color:var(--ink);font:900 20px Nunito;cursor:pointer}
+.qty output{min-width:2.5ch;text-align:center;font-weight:900;font-size:18px}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+.tabs button{min-height:44px;padding:8px 16px;border-radius:999px;border:3px solid var(--line);background:var(--card);color:var(--ink);font:700 15px Nunito;cursor:pointer}
+.tabs button[aria-pressed=true]{background:var(--sea);border-color:var(--sea);color:#fff}
+.alt{background:var(--sand)}
+.order{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px;align-items:start}
+form{display:grid;gap:16px}
+label{font-weight:700;display:grid;gap:6px}
+label span{font-weight:400;color:var(--mute);font-size:14px}
+input,textarea{font:16px Nunito,sans-serif;padding:12px;border-radius:10px;border:3px solid var(--line);background:var(--card);color:var(--ink);min-height:44px;width:100%}
+input[readonly]{background:var(--bg);color:var(--mute)}
+textarea{min-height:110px;resize:vertical}
+.who{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:var(--card);border:3px solid var(--line)}
+.who img{width:44px;height:44px;border-radius:50%}
+.who .x{margin-left:auto}
+.recap{position:sticky;top:96px;background:var(--card);border:3px solid #1b1f2a;border-radius:14px;padding:18px;box-shadow:0 6px 0 #1b1f2a}
+.recap ul{list-style:none;margin:0 0 12px;padding:0}
+.recap li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:2px dashed var(--line)}
+.recap li b{white-space:nowrap}
+.total{display:flex;justify-content:space-between;font-weight:900;font-size:22px;margin:8px 0 16px}
+.total b{color:var(--red);white-space:nowrap}
+.empty{color:var(--mute);font-style:italic}
+.msg{padding:14px;border-radius:12px;font-weight:700;display:none}
+.msg.show{display:block}.msg.ok{background:color-mix(in srgb,var(--ok) 18%,transparent);border:3px solid var(--ok)}
+.msg.err{background:color-mix(in srgb,var(--red) 15%,transparent);border:3px solid var(--red)}
+pre{white-space:pre-wrap;background:var(--bg);padding:12px;border-radius:10px;font-size:14px;overflow-x:auto}
+.note{font-size:14px;color:var(--mute)}
+footer{background:#1b1f2a;color:#f3ecdf;font-size:14px}
+footer a{color:#ffcf7a}
+@media(max-width:860px){.order{grid-template-columns:minmax(0,1fr)}.recap{position:static}}
+@media(max-width:600px){nav{margin-left:0}.hero{min-height:640px}.dialog{padding:22px 18px 20px}}
+@media(prefers-reduced-motion:no-preference){.bob{animation:bob 3s ease-in-out infinite}@keyframes bob{50%{transform:translateY(-6px)}}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <a class="logo px" href="#top"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect x="2" y="2" width="24" height="24" rx="6" fill="#fff" stroke="#1b1f2a" stroke-width="3"/><path d="M8 18c4-10 8-10 12 0" stroke="#e3352f" stroke-width="3" fill="none"/><circle cx="14" cy="11" r="3" fill="#1b1f2a"/></svg>TropiTaffs</a>
+  <nav><a href="#services">Services</a><a href="#commande">Commander</a><a href="#infos">Infos</a></nav>
+</div></header>
+
+<section class="hero" id="top">
+  <svg class="scene" id="scene" viewBox="0 0 1200 600" preserveAspectRatio="xMaxYMax slice" role="img" aria-label="Île tropicale en pixel art au coucher du soleil, avec un plat de chunks en construction">
+    
+  </svg>
+  <div class="wrap">
+    <div class="dialog">
+      <span class="tag px">TropiTaffs</span>
+      <h1 class="px">Le centre de commandes des dresseurs de Tropimon</h1>
+      <p>Farm de ressources, construction de plats et commandes sur mesure, à des prix très abordables. Tu choisis, on farm, tu progresses.</p>
+      <div class="hero-cta">
+        <a class="btn red" href="#commande">Passer commande</a>
+        <button class="btn discord" type="button" id="loginTop">Connexion Discord</button>
+      </div>
+      <span class="arrow px" aria-hidden="true">▼</span>
+    </div>
+  </div>
+</section>
+<script>
+{
+const S=document.getElementById("scene");let o="";
+const r=(x,y,w,h,c,extra="")=>o+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}" ${extra}/>`;
+const sky=["#ff6f61","#ff8659","#ff9d5c","#ffb468","#ffc97a","#ffdc94","#ffecb5"];
+sky.forEach((c,i)=>{const y=i*58;r(0,y,1200,58,c);if(i){for(let x=0;x<1200;x+=16)r(x+((i%2)*8),y,8,8,sky[i-1])}});
+/* soleil pixel */
+for(let dy=-88;dy<=88;dy+=8){const w=Math.round(Math.sqrt(88*88-dy*dy)/8)*8;r(940-w,320+dy,w*2,8,Math.abs(dy)<60&&w>40?"#fff6c2":"#ffe58a")}
+/* nuages */
+[[120,90,1],[420,150,.8],[760,70,1.2],[1040,170,.7]].forEach(([x,y,k])=>{const c="#fff3e3";r(x,y,160*k,24,c);r(x+24*k,y-16,96*k,16,c);r(x+48*k,y-32,40*k,16,c);r(x-16,y+24,200*k,8,"#ffd7c0")});
+/* oiseaux */
+[[560,120],[600,100],[640,130]].forEach(([x,y])=>{r(x,y,8,8,"#4a2b3a");r(x+8,y+8,8,8,"#4a2b3a");r(x+16,y,8,8,"#4a2b3a")});
+/* îlots lointains */
+[[40,384,220],[300,392,140]].forEach(([x,y,w])=>{for(let i=0;i<5;i++)r(x+i*16,y-i*8,w-i*32,8+i*8,"#c9706a")});
+/* mer */
+r(0,400,1200,200,"#2b97c6");r(0,460,1200,140,"#2382b3");r(0,530,1200,70,"#1a6a98");r(0,400,1200,8,"#8fd9f2");
+for(let i=0;i<9;i++){const w=140-i*14;r(940-w/2,408+i*12,w,6,"#ffe9a0",'opacity=".75"')}
+let wv="";for(let i=0;i<40;i++){const x=(i*173)%1200,y=420+((i*61)%170);wv+=`<rect x="${x}" y="${y}" width="${24+(i%3)*16}" height="6" fill="#9be0f5" opacity=".7"/>`}
+o+=`<g class="wave">${wv}</g>`;
+/* île */
+const cx=900,cy=500;r(cx-300,cy+8,600,16,"#e9f8ff");
+for(let dy=-56;dy<=24;dy+=8){const w=Math.round(Math.sqrt(1-(dy*dy)/(64*64))*300/8)*8;r(cx-w,cy+dy,w*2,8,dy<-40?"#ffe7ad":dy>8?"#e2b66a":"#f6d18a")}
+/* palmiers */
+const palm=(x,dir)=>{for(let i=0;i<12;i++)r(x+dir*Math.round(i*i/14)*8,cy-56-i*16,16,16,i%2?"#6b3f1d":"#7d4c24");const tx=x+dir*Math.round(121/14)*8+8,ty=cy-56-192;
+[[-1,1],[1,1],[-1,2.2],[1,2.2],[-1,.3],[1,.3]].forEach(([a,d])=>{for(let k=0;k<8;k++){const x=tx+a*k*12-8,y=ty+Math.round(d*k*k*.9/4)*4-(d<1?k*4:0);r(x,y,20,12,"#24804a");r(x,y,20,4,"#3fbf6a")}});
+for(let k=0;k<3;k++)r(tx-12+k*8,ty-12-k*4,16,16,"#2f9e5a");r(tx-8,ty+4,16,16,"#6b3f1d");r(tx+4,ty+12,12,12,"#5b3518")};
+palm(668,1);palm(1130,-1);
+/* échoppe TropiTaffs */
+const sx=800,sy=330;
+r(sx+8,sy+40,12,120,"#7d4c24");r(sx+164,sy+40,12,120,"#7d4c24");
+for(let i=0;i<8;i++)r(sx-8+i*25,sy+8,25,40,i%2?"#fff":"#e3352f");
+for(let i=0;i<8;i++)r(sx-8+i*25,sy+48,25,10,i%2?"#e3352f":"#fff");
+r(sx-8,sy+8,200,4,"#1b1f2a");r(sx-8,sy+58,200,4,"#1b1f2a");
+r(sx+60,sy-16,64,26,"#fff6e0");r(sx+60,sy-16,64,26,"none",'stroke="#1b1f2a" stroke-width="4"');
+o+=`<text x="${sx+92}" y="${sy+4}" text-anchor="middle" font-family="'Press Start 2P',monospace" font-size="13" fill="#e3352f">TT</text>`;
+r(sx,sy+110,184,14,"#c98b4f");r(sx,sy+124,184,42,"#a86d36");r(sx,sy+110,184,56,"none",'stroke="#1b1f2a" stroke-width="4"');
+for(let i=0;i<4;i++)r(sx+12+i*44,sy+132,32,4,"#8a5428");
+/* marchandises sur le comptoir */
+r(sx+20,sy+86,28,24,"#f2d98c");r(sx+20,sy+86,28,6,"#ffe9a8");
+r(sx+60,sy+80,24,30,"#bfe6f5",'opacity=".9"');r(sx+64,sy+84,6,18,"#fff");
+r(sx+100,sy+90,40,20,"#cfd4dc");r(sx+100,sy+90,40,5,"#eef1f5");
+r(sx+148,sy+92,20,18,"#ffcf3a");
+o+=`<g class="bob"><rect x="${sx+196}" y="${sy+20}" width="34" height="26" fill="#fff" stroke="#1b1f2a" stroke-width="4"/><text x="${sx+213}" y="${sy+40}" text-anchor="middle" font-family="Nunito,sans-serif" font-weight="900" font-size="18" fill="#e3352f">$</text></g>`;
+/* shulker */
+r(1010,452,48,48,"#fff");r(1010,452,48,22,"#e3352f");r(1010,452,48,48,"none",'stroke="#1b1f2a" stroke-width="4"');r(1026,476,16,8,"#1b1f2a");
+S.insertAdjacentHTML("beforeend",o);
+}
+</script>
+
+<section class="band" id="services"><div class="wrap">
+  <h2 class="px">Nos services</h2>
+  <p class="lead">Ajoute ce dont tu as besoin, le total se calcule tout seul. Prix des plats : sans matériaux ou avec matériaux classiques fournis par nos soins.</p>
+  <div class="tabs" role="group" aria-label="Catégories">
+    <button type="button" data-cat="farm" aria-pressed="true">Farm de ressources</button>
+    <button type="button" data-cat="plat" aria-pressed="false">Plats sans matériaux</button>
+    <button type="button" data-cat="platmat" aria-pressed="false">Plats avec matériaux</button>
+  </div>
+  <div class="grid" id="catalog"></div>
+  <p class="note" style="margin-top:16px">Pour tout ce qui est shulker de blocs de fer, contacte So_Clever, gros vendeur de Tropi et associé de TropiTaffs.</p>
+</div></section>
+
+<section class="band alt" id="commande"><div class="wrap order">
+  <div>
+    <h2 class="px">Ta commande</h2>
+    <p class="lead" style="color:inherit">Connecte-toi avec Discord pour qu'on soit sûrs que c'est bien toi, puis indique ton pseudo Tropimon.</p>
+    <form id="form" novalidate>
+      <div id="authBox"></div>
+      <label>Pseudo Tropimon (en jeu) *<input id="mc" name="mc" required maxlength="32" autocomplete="off" placeholder="Ex. Akumaa1702"></label>
+      <label>Coordonnées ou lieu de livraison <span>Optionnel, pour les plats ou la remise en main propre</span><input id="coords" maxlength="80" placeholder="Ex. x 1200 / z -340, warp de ma base"></label>
+      <label>Commande personnalisée ou précisions <span>Projet sur mesure, délai souhaité, blocs particuliers… on te répond en MP avec un devis</span><textarea id="notes" maxlength="1000"></textarea></label>
+      <div class="msg" id="msg" role="status"></div>
+      <button class="btn red" type="submit" id="send">Envoyer la commande</button>
+    </form>
+  </div>
+  <aside class="recap" aria-label="Récapitulatif">
+    <h2 class="px" style="font-size:13px">Récapitulatif</h2>
+    <ul id="recap"></ul>
+    <div class="total"><span>Total estimé</span><b id="total">0 $</b></div>
+    <p class="note">Le paiement se fait en jeu à la livraison. Les commandes personnalisées sont chiffrées à part selon la quantité, la taille et la difficulté.</p>
+  </aside>
+</div></section>
+
+<section class="band" id="infos"><div class="wrap">
+  <h2 class="px">Comment ça marche</h2>
+  <p class="lead">Tu envoies ta commande ici, elle arrive directement sur notre Discord. Akumaa te contacte en MP pour confirmer le délai, puis on te livre en jeu sur Tropimon. Une question ou un devis ? Écris à TropiTaffs (Akumaa) sur Discord.</p>
+</div></section>
+
+<footer class="band"><div class="wrap">TropiTaffs, service de joueurs sur le serveur Tropimon. Site non officiel, non affilié à Nintendo, The Pokémon Company ni Mojang.</div></footer>
+
+<script>
+{
+/* ===== CONFIGURATION, à remplir ===== */
+const CONFIG = {
+  DISCORD_CLIENT_ID: "",            // ID de ton application sur discord.com/developers
+  REDIRECT_URI: location.origin + location.pathname, // doit être ajoutée telle quelle dans OAuth2 > Redirects
+  WEBHOOK_URL: ""                   // Webhook du salon où arrivent les commandes
+};
+
+const ITEMS = [
+  {id:"sable",cat:"farm",name:"Shulker de sable",price:350,unit:"le shulker"},
+  {id:"verre",cat:"farm",name:"Shulker de verre",price:450,unit:"le shulker"},
+  ...[[3,900],[4,1600],[5,2500],[6,3600],[7,4900]].map(([n,p])=>({id:"p"+n,cat:"plat",name:`Plat ${n}x${n}`,price:p,unit:`${n*n} chunks, sans matériaux`})),
+  ...[[3,1305],[4,2320],[5,3625],[6,5220],[7,7105]].map(([n,p])=>({id:"m"+n,cat:"platmat",name:`Plat ${n}x${n}`,price:p,unit:`${n*n} chunks, matériaux classiques fournis`}))
+];
+const LABEL={farm:"",plat:" (sans matériaux)",platmat:" (avec matériaux)"};
+const fmt=n=>n.toLocaleString("fr-FR").replace(/ | /g," ")+" $";
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const $=id=>document.getElementById(id);
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch{return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}},del(k){try{localStorage.removeItem(k)}catch{}}};
+
+let cart=store.get("tt_cart")||{}, cat="farm", user=null;
+
+function renderCatalog(){
+  $("catalog").innerHTML=ITEMS.filter(i=>i.cat===cat).map(i=>`
+    <div class="card"><h3>${i.name}</h3><small>${i.unit}</small><div class="price">${fmt(i.price)}</div>
+    <div class="qty"><button type="button" data-d="-1" data-id="${i.id}" aria-label="Retirer ${i.name}">−</button>
+    <output>${cart[i.id]||0}</output><button type="button" data-d="1" data-id="${i.id}" aria-label="Ajouter ${i.name}">+</button></div></div>`).join("");
+}
+function renderRecap(){
+  const lines=ITEMS.filter(i=>cart[i.id]>0);
+  $("recap").innerHTML=lines.length?lines.map(i=>`<li><span>${cart[i.id]} × ${i.name}${LABEL[i.cat]}</span><b>${fmt(cart[i.id]*i.price)}</b></li>`).join(""):`<li class="empty">Rien pour l'instant. Ajoute des articles ou décris une commande personnalisée.</li>`;
+  $("total").textContent=fmt(lines.reduce((s,i)=>s+cart[i.id]*i.price,0));
+}
+$("catalog").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-id]");if(!b)return;
+  const v=Math.max(0,Math.min(99,(cart[b.dataset.id]||0)+Number(b.dataset.d)));
+  if(v)cart[b.dataset.id]=v;else delete cart[b.dataset.id];
+  store.set("tt_cart",cart);renderCatalog();renderRecap();
+});
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{
+  cat=b.dataset.cat;document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-pressed",x===b));renderCatalog();
+}));
+
+/* ===== Connexion Discord (OAuth2, flux implicite, scope identify) ===== */
+function login(){
+  if(!CONFIG.DISCORD_CLIENT_ID){showMsg("err","La connexion Discord n'est pas encore configurée. Indique ton pseudo Discord à la main.");$("commande").scrollIntoView();return}
+  const state=Math.random().toString(36).slice(2);store.set("tt_state",state);
+  const u=new URL("https://discord.com/oauth2/authorize");
+  u.search=new URLSearchParams({client_id:CONFIG.DISCORD_CLIENT_ID,redirect_uri:CONFIG.REDIRECT_URI,response_type:"token",scope:"identify",state,prompt:"none"});
+  location.href=u;
+}
+async function handleReturn(){
+  const h=new URLSearchParams(location.hash.slice(1));
+  const token=h.get("access_token");
+  if(token){
+    history.replaceState(null,"",location.pathname+location.search);
+    if(h.get("state")!==store.get("tt_state")){showMsg("err","Connexion refusée : vérification de sécurité échouée, réessaie.");return}
+    try{
+      const r=await fetch("https://discord.com/api/users/@me",{headers:{Authorization:"Bearer "+token}});
+      if(!r.ok)throw 0;
+      const d=await r.json();
+      user={id:d.id,name:d.username,display:d.global_name||d.username,avatar:d.avatar?`https://cdn.discordapp.com/avatars/${d.id}/${d.avatar}.png?size=64`:`https://cdn.discordapp.com/embed/avatars/${Number(BigInt(d.id)>>22n)%6}.png`};
+      store.set("tt_user",user);
+    }catch{showMsg("err","Impossible de récupérer ton profil Discord, réessaie.")}
+  }else user=store.get("tt_user");
+}
+function renderAuth(){
+  if(user){
+    $("authBox").innerHTML=`<div class="who"><img src="${esc(user.avatar)}" alt=""><div><b>${esc(user.display)}</b><br><span class="note">@${esc(user.name)} · connecté via Discord</span></div><button type="button" class="btn x" id="logout">Déconnexion</button></div>`;
+    $("logout").onclick=()=>{user=null;store.del("tt_user");renderAuth()};
+  }else{
+    $("authBox").innerHTML=`<div style="display:grid;gap:10px">
+      <button type="button" class="btn discord" id="loginForm">Se connecter avec Discord</button>
+      ${CONFIG.DISCORD_CLIENT_ID?"":`<label>Pseudo Discord *<span>Connexion Discord pas encore activée : saisis-le à la main</span><input id="dc" maxlength="40" placeholder="Ex. akumaa1702"></label>`}</div>`;
+    $("loginForm").onclick=login;
+  }
+}
+$("loginTop").onclick=login;
+
+function showMsg(type,html){const m=$("msg");m.className="msg show "+type;m.innerHTML=html}
+
+$("form").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const mc=$("mc").value.trim(),coords=$("coords").value.trim(),notes=$("notes").value.trim();
+  const dcManual=$("dc")?$("dc").value.trim():"";
+  if(!user&&CONFIG.DISCORD_CLIENT_ID)return showMsg("err","Connecte-toi avec Discord avant d'envoyer ta commande.");
+  if(!user&&!dcManual)return showMsg("err","Indique ton pseudo Discord.");
+  if(!/^[A-Za-z0-9_]{3,16}$/.test(mc))return showMsg("err","Pseudo Tropimon invalide (3 à 16 caractères : lettres, chiffres, _).");
+  const lines=ITEMS.filter(i=>cart[i.id]>0);
+  if(!lines.length&&!notes)return showMsg("err","Ta commande est vide : ajoute un article ou décris ta demande.");
+  const total=lines.reduce((s,i)=>s+cart[i.id]*i.price,0);
+  const detail=lines.map(i=>`${cart[i.id]} × ${i.name}${LABEL[i.cat]} = ${fmt(cart[i.id]*i.price)}`).join("\n")||"Aucun article du catalogue";
+  const discord=user?`<@${user.id}> (@${user.name}) ✅ vérifié`:`${dcManual} (non vérifié)`;
+  const text=`Nouvelle commande TropiTaffs\nDiscord : ${user?"@"+user.name:dcManual}\nTropimon : ${mc}\n${detail}\nTotal estimé : ${fmt(total)}${coords?"\nLivraison : "+coords:""}${notes?"\nPrécisions : "+notes:""}`;
+
+  if(!CONFIG.WEBHOOK_URL){
+    showMsg("ok",`Commande prête. Copie ce message et envoie-le en MP à Akumaa sur Discord :<pre>${esc(text)}</pre><button type="button" class="btn" id="copy">Copier</button>`);
+    $("copy").onclick=async()=>{try{await navigator.clipboard.writeText(text);$("copy").textContent="Copié !"}catch{$("copy").textContent="Sélectionne le texte pour copier"}};
+    return;
+  }
+  $("send").disabled=true;$("send").textContent="Envoi…";
+  try{
+    const r=await fetch(CONFIG.WEBHOOK_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+      username:"TropiTaffs Commandes",allowed_mentions:{parse:[]},
+      embeds:[{title:"🛒 Nouvelle commande",color:0xe3352f,timestamp:new Date().toISOString(),
+        thumbnail:user?{url:user.avatar}:undefined,
+        fields:[{name:"Discord",value:discord,inline:true},{name:"Pseudo Tropimon",value:mc,inline:true},
+          {name:"Articles",value:detail.slice(0,1000)},{name:"Total estimé",value:fmt(total),inline:true},
+          ...(coords?[{name:"Livraison",value:coords.slice(0,200),inline:true}]:[]),
+          ...(notes?[{name:"Précisions",value:notes.slice(0,1000)}]:[])]}]})});
+    if(!r.ok)throw 0;
+    cart={};store.set("tt_cart",cart);renderCatalog();renderRecap();$("notes").value="";$("coords").value="";
+    showMsg("ok","Commande envoyée ! Akumaa te contacte en MP sur Discord pour confirmer.");
+  }catch{showMsg("err","L'envoi a échoué. Réessaie, ou envoie ta commande en MP à Akumaa.")}
+  $("send").disabled=false;$("send").textContent="Envoyer la commande";
+});
+
+$("mc").value=store.get("tt_mc")||"";
+$("mc").addEventListener("input",()=>store.set("tt_mc",$("mc").value));
+renderCatalog();renderRecap();
+handleReturn().then(renderAuth);
+}
+</script>
+</body>
+</html>
