@@ -54,14 +54,13 @@ module.exports = async (req, res) => {
 
   const cart = body.cart && typeof body.cart === "object" ? body.cart : {};
   const lines = [];
-  let total = 0, farmTotal = 0, platTotal = 0;
+  let total = 0;
   for (const [id, q] of Object.entries(cart)) {
     const item = CATALOG[id];
     const qty = Math.floor(Number(q));
     if (!item || !(qty >= 1 && qty <= 99)) continue;
     if (item[2] && qty > item[2]) return res.status(400).json({ error: `Maximum ${item[2]} × ${item[0]} par personne.` });
     total += qty * item[1];
-    if (/^[pm]\d$/.test(id)) platTotal += qty * item[1]; else if (id !== "bisball") farmTotal += qty * item[1]; /* 0 % sur la Bis Ball */
     lines.push(`${qty} × ${item[0]} = ${fmt(qty * item[1])}`);
   }
   const customs = (Array.isArray(body.customs) ? body.customs : []).slice(0, 5).map((c) => ({
@@ -86,9 +85,6 @@ module.exports = async (req, res) => {
   ];
   if (cdetail) fields.push({ name: "Demandes personnalisées (sur devis)", value: cdetail.slice(0, 1000) });
   fields.push({ name: "Total estimé", value: fmt(total) + (customs.length ? " + devis" : ""), inline: true });
-  const partFarm = Math.round(farmTotal * 0.05), partPlat = Math.round(platTotal * 0.1);
-  const detailPart = [farmTotal ? `5 % farm : ${fmt(partFarm)}` : "", platTotal ? `10 % plats : ${fmt(partPlat)}` : ""].filter(Boolean).join(" + ");
-  fields.push({ name: "💰 Part Nexrooos", value: fmt(partFarm + partPlat) + (detailPart ? ` (${detailPart})` : ""), inline: true });
   if (coords) fields.push({ name: "Livraison", value: coords, inline: true });
   if (notes) fields.push({ name: "Précisions", value: notes });
 
