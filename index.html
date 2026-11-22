@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TropiTaffs Commandes</title>
+<link rel="icon" type="image/png" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
@@ -25,7 +26,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Nunito,system
 .wrap{max-width:1240px;margin:0 auto}
 header{position:sticky;top:0;z-index:5;background:var(--red);color:#fff;border-bottom:4px solid #1b1f2a}
 header .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;padding:12px max(5vw,16px)}
-.logo{font-size:14px;display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none}
+.logo{display:flex;align-items:center;text-decoration:none}.logo img{height:56px;width:auto;display:block;filter:drop-shadow(0 2px 0 rgba(0,0,0,.35))}
 nav{display:flex;flex-wrap:wrap;gap:4px 18px;margin-left:auto;font-weight:700}
 .me{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:4px 12px 4px 4px;border:3px solid #1b1f2a;border-radius:999px;background:#fff;color:#1b1f2a;font-weight:900;text-decoration:none;margin-left:6px}
 .me .av{position:relative;width:34px;height:34px;flex:none}.me img{width:34px;height:34px;border-radius:50%;display:block}
@@ -39,6 +40,8 @@ nav{align-items:center}nav a{color:#fff;text-decoration:none;padding:6px 0}nav a
 .scene{position:absolute;inset:0;width:100%;height:100%;display:block;shape-rendering:crispEdges}
 .hero .wrap{position:relative;padding:clamp(32px,6vw,80px) max(5vw,16px)}
 .dialog{max-width:540px;background:#fff;border:4px solid #1b1f2a;border-radius:6px;box-shadow:inset 0 0 0 4px #fff,inset 0 0 0 7px #3b6fd8,0 8px 0 rgba(0,0,0,.35);padding:26px 26px 22px;position:relative}
+.dialog .dlogo{display:block;width:min(260px,70%);height:auto;margin:-96px auto 4px;filter:drop-shadow(0 4px 0 rgba(0,0,0,.3))}
+.hero .wrap{padding-top:clamp(96px,10vw,120px)!important}
 .dialog .tag{position:absolute;top:-18px;left:18px;background:var(--red);color:#fff;border:4px solid #1b1f2a;padding:6px 10px;font-size:10px}
 .hero h1{font-size:clamp(17px,2.3vw,26px);margin:6px 0 14px;text-wrap:balance}
 .hero p{font-size:17px;margin:0 0 20px;font-weight:700}
@@ -106,7 +109,7 @@ footer a{color:#ffcf7a}
 </head>
 <body>
 <header><div class="wrap">
-  <a class="logo px" href="#top"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect x="2" y="2" width="24" height="24" rx="6" fill="#fff" stroke="#1b1f2a" stroke-width="3"/><path d="M8 18c4-10 8-10 12 0" stroke="#e3352f" stroke-width="3" fill="none"/><circle cx="14" cy="11" r="3" fill="#1b1f2a"/></svg>TropiTaffs</a>
+  <a class="logo" href="#top"><img src="logo-sm.png" alt="TropiTaffs" width="96" height="56"></a>
   <nav><a href="#services">Services</a><a href="#commande">Commander</a><a href="#infos">Infos</a><span id="me"></span><button type="button" id="snd" class="snd" aria-pressed="true" aria-label="Couper le son">🔊</button></nav>
 </div></header>
 
@@ -116,7 +119,7 @@ footer a{color:#ffcf7a}
   </svg>
   <div class="wrap">
     <div class="dialog">
-      <span class="tag px">TropiTaffs</span>
+      <img class="dlogo" src="logo.png" alt="TropiTaffs" width="548" height="317">
       <h1 class="px">Le centre de commandes des dresseurs de Tropimon</h1>
       <p>Farm de ressources, construction de plats et commandes sur mesure, à des prix très abordables. Tu choisis, on farm, tu progresses.</p>
       <div class="hero-cta">
