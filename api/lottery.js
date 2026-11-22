@@ -134,7 +134,7 @@ module.exports = async (req, res) => {
     const token = req.method === "POST" ? str(body.token, 200) : "";
     const user = token ? await discordUser(token) : null;
     // Équipe autorisée à valider les paiements (identifiants Discord). ADMIN_IDS peut en ajouter.
-    const admins = ["390924523765104642" /* Nexro */, "1403737838536757301" /* Akumaa1702 */,
+    const admins = ["390924523765104642" /* Nexro */, "1403737838536757301" /* Akumaa1702 */, "1470525596885844080" /* lewoodzz */,
       ...(process.env.ADMIN_IDS || "").split(",").map((s) => s.trim()).filter(Boolean)];
     const isAdmin = !!user && admins.includes(user.id);
 
