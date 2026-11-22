@@ -205,12 +205,12 @@ const CONFIG = {
 };
 
 const ITEMS = [
-  {id:"sable",cat:"farm",name:"Shulker de sable",price:350,unit:"le shulker"},
-  {id:"verre",cat:"farm",name:"Shulker de verre",price:450,unit:"le shulker"},
-  {id:"mousse",cat:"farm",name:"Shulker de mousse",price:300,unit:"le shulker"},
-  {id:"trap",cat:"farm",name:"Shulker de trappes",price:1400,unit:"le shulker"},
-  {id:"planches",cat:"farm",name:"Shulker de planches de bois",price:600,unit:"le shulker"},
-  {id:"stone",cat:"farm",name:"Shulker de stone",price:500,unit:"le shulker"},
+  {id:"sable",cat:"farm",name:"Shulker de sable",price:350,unit:""},
+  {id:"verre",cat:"farm",name:"Shulker de verre",price:450,unit:""},
+  {id:"mousse",cat:"farm",name:"Shulker de mousse",price:300,unit:""},
+  {id:"trap",cat:"farm",name:"Shulker de trappes",price:1400,unit:""},
+  {id:"planches",cat:"farm",name:"Shulker de planches de bois",price:600,unit:""},
+  {id:"stone",cat:"farm",name:"Shulker de stone",price:500,unit:""},
   ...[[3,900],[4,1600],[5,2500],[6,3600],[7,4900]].map(([n,p])=>({id:"p"+n,cat:"plat",name:`Plat ${n}x${n}`,price:p,unit:`${n*n} chunks, sans matériaux`})),
   ...[[3,1305],[4,2320],[5,3625],[6,5220],[7,7105]].map(([n,p])=>({id:"m"+n,cat:"platmat",name:`Plat ${n}x${n}`,price:p,unit:`${n*n} chunks, matériaux classiques fournis`}))
 ];
@@ -224,7 +224,7 @@ let cart=store.get("tt_cart")||{}, cat="farm", user=null;
 
 function renderCatalog(){
   $("catalog").innerHTML=ITEMS.filter(i=>i.cat===cat).map(i=>`
-    <div class="card"><h3>${i.name}</h3><small>${i.unit}</small><div class="price">${fmt(i.price)}</div>
+    <div class="card"><h3>${i.name}</h3>${i.unit?`<small>${i.unit}</small>`:""}<div class="price">${fmt(i.price)}</div>
     <div class="qty"><button type="button" data-d="-1" data-id="${i.id}" aria-label="Retirer ${i.name}">−</button>
     <output>${cart[i.id]||0}</output><button type="button" data-d="1" data-id="${i.id}" aria-label="Ajouter ${i.name}">+</button></div></div>`).join("");
 }
