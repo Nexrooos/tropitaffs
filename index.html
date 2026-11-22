@@ -629,7 +629,9 @@ function pkRenderForm(msg){
     else{const x=$("pkF").querySelector(`input[data-iv="${b.dataset.iv31}"]`);x.value=(parseInt(x.value,10)||0)===31?0:31}
     paintIv();syncDiff();sfx("click")});syncAb();syncDiff();
   $("pkCancel").onclick=()=>{const was=pkSel;pkSel=null;pkRenderForm();pkRenderList();sfx("click");
-    const row=$("pkList").querySelector(`button[data-fam="${was}"]`);(row?row.closest(".fam"):$("pokemon")).scrollIntoView({block:"center"})};
+    const row=$("pkList").querySelector(`button[data-fam="${was}"]`),target=row?row.closest(".fam"):$("pkQ");
+    requestAnimationFrame(()=>{const head=document.querySelector("body>header"),off=head&&getComputedStyle(head).position==="sticky"?head.offsetHeight+16:16;
+      window.scrollTo({top:Math.max(0,$("pkQ").getBoundingClientRect().top+scrollY-off-40),behavior:"instant"});if(target)target.focus?.()})};
   if(!user)$("pkLogin").onclick=login;
   $("pkF").addEventListener("submit",async e=>{
     e.preventDefault();
