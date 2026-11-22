@@ -81,6 +81,8 @@ module.exports = async (req, res) => {
   ];
   if (cdetail) fields.push({ name: "Demandes personnalisées (sur devis)", value: cdetail.slice(0, 1000) });
   fields.push({ name: "Total estimé", value: fmt(total) + (customs.length ? " + devis" : ""), inline: true });
+  const part = Math.round(total * 0.1);
+  fields.push({ name: "💰 Part Nexrooos (10 %)", value: fmt(part) + (customs.length ? " + 10 % du devis" : ""), inline: true });
   if (coords) fields.push({ name: "Livraison", value: coords, inline: true });
   if (notes) fields.push({ name: "Précisions", value: notes });
 
