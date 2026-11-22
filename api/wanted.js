@@ -1,6 +1,8 @@
 // Demandes de Pokémon : le joueur décrit le Pokémon voulu (IV, talent, prix proposé).
 // On vérifie son compte Discord et les données, puis on envoie la demande dans #Tropitaff.
 const FAMILIES = require("../data/pokemon.json");
+const { ADMINS, redis } = require("./_team.js");
+const crypto = require("crypto");
 
 const BY_NUM = new Map(), FAM_OF = new Map();
 for (const fam of FAMILIES) for (const m of fam) { BY_NUM.set(m.n, m); FAM_OF.set(m.n, fam); }
@@ -43,6 +45,23 @@ module.exports = async (req, res) => {
     return res.status(502).json({ error: "Discord ne répond pas, réessaie." });
   }
 
+  // Outils de l'équipe : liste des demandes triées par prix, marquer une demande comme traitée
+  const action = str(body.action, 10);
+  if (action === "list" || action === "done" || action === "reopen") {
+    if (!ADMINS.includes(user.id)) return res.status(403).json({ error: "Réservé à l'équipe TropiTaffs." });
+    const raw = (await redis(["HGETALL", "wanted"])) || [];
+    const all = [];
+    for (let i = 0; i < raw.length; i += 2) all.push(JSON.parse(raw[i + 1]));
+    if (action !== "list") {
+      const w = all.find((x) => x.id === str(body.id, 20));
+      if (!w) return res.status(404).json({ error: "Demande introuvable." });
+      w.status = action === "done" ? "done" : "open"; w.by = user.username;
+      await redis(["HSET", "wanted", w.id, JSON.stringify(w)]);
+    }
+    all.sort((a, b) => b.price - a.price || a.at - b.at);
+    return res.status(200).json({ requests: all });
+  }
+
   const mc = str(body.mc, 16);
   if (!/^[A-Za-z0-9_]{3,16}$/.test(mc)) return res.status(400).json({ error: "Pseudo Tropimon invalide." });
   const mon = BY_NUM.get(Number(body.n));
@@ -61,6 +80,7 @@ module.exports = async (req, res) => {
   const price = Math.floor(Number(body.price));
   if (!(price >= 1 && price <= 100000000)) return res.status(400).json({ error: "Indique le prix que tu es prêt à mettre." });
   const notes = clean(str(body.notes, 500));
+  const dif = difficulty(mon.n, iv, isTc);
 
   const avatar = user.avatar
     ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`
@@ -70,13 +90,18 @@ module.exports = async (req, res) => {
     { name: "Pseudo Tropimon", value: mc, inline: true },
     { name: "Pokémon", value: `${mon.fr} (n°${mon.n})`, inline: true },
     { name: "Rareté", value: rLabel(mon.r), inline: true },
-    { name: "Difficulté estimée", value: difficulty(mon.n, iv, isTc), inline: true },
+    { name: "Difficulté estimée", value: dif, inline: true },
     { name: "IV souhaités", value: ivText },
     { name: "Talent", value: talent, inline: true },
     { name: "Prix proposé", value: fmt(price), inline: true },
   ];
   if (notes) fields.push({ name: "Précisions", value: notes });
 
+  const id = crypto.randomBytes(4).toString("hex");
+  try {
+    await redis(["HSET", "wanted", id, JSON.stringify({ id, at: Date.now(), uid: user.id, name: user.username, mc, n: mon.n, pokemon: mon.fr,
+      iv, talent, tc: isTc, price, difficulty: dif, rarity: rLabel(mon.r), notes, status: "open" })]);
+  } catch (e) { console.error("wanted store", e); }
   try {
     const r = await fetch(hook, {
       method: "POST",

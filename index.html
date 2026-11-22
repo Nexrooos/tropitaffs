@@ -68,6 +68,17 @@ h2{font-size:clamp(14px,1.8vw,20px);margin:0 0 8px}
 .alt{background:var(--sand)}
 .pkbar{display:flex;flex-wrap:wrap;align-items:end;gap:10px 16px;margin-bottom:14px}.pksearch{flex:1 1 320px;max-width:520px}
 .pklist{display:grid;gap:8px}
+.wadm{background:var(--card);border:3px solid #1b1f2a;border-radius:14px;padding:18px 20px;box-shadow:0 6px 0 #1b1f2a;margin:0 0 22px}
+.wadm h3{margin:0 0 4px;font-size:19px}.wadm .sum{color:var(--mute);margin:0 0 14px;font-size:14px}
+.wrow{display:grid;grid-template-columns:32px minmax(0,1.2fr) minmax(0,1.6fr) 230px;gap:10px 14px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.wrow.done{opacity:.55}.wrank{font-weight:900;color:var(--mute);text-align:right}
+.wwho b{display:block}.wwho span{font-size:13px;color:var(--mute);display:block}
+.wbar{position:relative;display:flex;align-items:center;gap:8px}.wtrack{flex:1;height:14px;border-radius:0 4px 4px 0;background:color-mix(in srgb,var(--line) 60%,transparent)}
+.wtrack i{display:block;height:100%;border-radius:0 4px 4px 0;background:var(--sea);min-width:3px}
+.wbar strong{white-space:nowrap;font-size:16px;min-width:90px;text-align:right}
+.wact{display:flex;gap:6px;align-items:center;justify-content:flex-end}.wact button{min-height:38px;padding:4px 10px;border-radius:8px;border:2px solid #1b1f2a;background:var(--bg);color:var(--ink);font:900 13px Nunito,sans-serif;cursor:pointer}
+.dtag{font-size:12px;font-weight:900;padding:2px 8px;border-radius:999px;border:2px solid var(--line);white-space:nowrap}
+@media(max-width:760px){.wrow{grid-template-columns:28px minmax(0,1fr)}.wbar,.wact{grid-column:2}.wact{justify-content:flex-start}}
 .legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin:0 0 14px;font-size:14px;align-items:center}
 .rb{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:900;color:#fff;white-space:nowrap;vertical-align:middle}
 .rb.common{background:#2f9e55}.rb.uncommon{background:#3b6fd8}.rb.rare{background:#8e44c9}.rb.ultra-rare{background:#d9730d}.rb.none{background:#7a7f8c}
@@ -301,6 +312,7 @@ S.innerHTML=`<g transform="scale(4)">${o}</g><text x="896" y="414" text-anchor="
   <p class="lead">Tu cherches un Pokémon précis ? Trouve sa famille, choisis les IV, le talent et le prix que tu es prêt à mettre.</p>
   <p class="info" style="margin:0 0 18px"><b>On ne promet rien :</b> on prend juste note de ta demande et on te recontacte sur Discord si jamais on a le Pokémon. Plus tes exigences sont élevées (IV, talent caché), plus ça peut être long à trouver.</p>
   <div class="pkbar"><label class="pksearch">Rechercher un Pokémon<input id="pkQ" type="search" placeholder="Ex. Salamèche, Évoli, Lucario…" autocomplete="off"></label><span class="note" id="pkCount"></span></div>
+  <div id="pkAdmin"></div>
   <div class="legend" id="pkLegend"></div>
   <div id="pkForm"></div>
   <div class="pklist" id="pkList"><p class="note">Chargement de la liste…</p></div>
@@ -627,7 +639,7 @@ function pkRenderForm(msg){
     try{const r=await fetch("/api/wanted",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});const d=await r.json().catch(()=>({}));
       if(r.status===401){user=null;store.del("tt_user");renderAuth()}
       if(!r.ok)throw new Error(d.error||"L'envoi a échoué.");
-      sfx("win");const name=PK[pkSel].find(m=>m.n===payload.n).fr;pkSel=null;pkRenderList();
+      sfx("win");const name=PK[pkSel].find(m=>m.n===payload.n).fr;wLoad();pkSel=null;pkRenderList();
       $("pkForm").innerHTML=`<p class="msg show ok">Demande pour ${esc(name)} envoyée ! On te recontacte sur Discord si jamais on l'a. Rien n'est promis.</p>`;
     }catch(err){sfx("err");pkRenderForm(["err",err.message])}
   });
@@ -635,6 +647,27 @@ function pkRenderForm(msg){
 $("pkQ").addEventListener("input",()=>{pkShown=40;if(PK)pkRenderList()});
 $("pkMore").onclick=()=>{pkShown+=60;pkRenderList();sfx("click")};
 $("pkList").addEventListener("click",e=>{const b=e.target.closest("button[data-fam]");if(!b)return;pkSel=Number(b.dataset.fam);pkRenderForm();pkRenderList();sfx("click");$("pkForm").scrollIntoView({block:"start"})});
+/* Outil équipe : demandes triées par prix proposé */
+let WREQ=null,wShowDone=false;
+const ivShort=iv=>iv.every(v=>v===0)?"IV : peu importe":"IV : "+["PV","Atq","Déf","AtqS","DéfS","Vit"].map((s,i)=>iv[i]===31?s+" 31":iv[i]>0?s+"≥"+iv[i]:"").filter(Boolean).join(", ");
+async function wCall(payload){const r=await fetch("/api/wanted",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:user&&user.token,...payload})});const d=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(d.error||"Erreur"),{status:r.status});return d}
+function wRender(){
+  const open=WREQ.filter(w=>w.status!=="done"),done=WREQ.length-open.length,list=wShowDone?WREQ:open,max=Math.max(1,...list.map(w=>w.price));
+  $("pkAdmin").innerHTML=`<div class="wadm"><h3>Équipe : demandes par prix proposé</h3>
+    <p class="sum">${open.length} demande${open.length>1?"s":""} en cours${open.length?` · offre la plus haute <b style="white-space:nowrap">${fmt(open[0].price)}</b> (${esc(open[0].mc)}, ${esc(open[0].pokemon)})`:""}. Visible seulement par l'équipe. ${done?`<button type="button" class="linkbtn" id="wToggle">${done>1?`${wShowDone?"Masquer":"Voir"} les ${done} traitées`:`${wShowDone?"Masquer":"Voir"} la demande traitée`}</button>`:""}</p>
+    ${list.length?list.map((w,i)=>`<div class="wrow${w.status==="done"?" done":""}" title="${esc(`${w.pokemon} · ${ivShort(w.iv)} · Talent : ${w.talent} · Rareté : ${w.rarity} · ${new Date(w.at).toLocaleString("fr-FR")}${w.notes?" · "+w.notes:""}`)}">
+      <span class="wrank">${i+1}</span>
+      <div class="wwho"><b>${esc(w.mc)} <span style="display:inline">@${esc(w.name)}</span></b><span>${esc(w.pokemon)} · ${esc(ivShort(w.iv))}${w.tc?" · TC":""}</span></div>
+      <div class="wbar"><div class="wtrack"><i style="width:${Math.round(w.price/max*100)}%"></i></div><strong>${fmt(w.price)}</strong></div>
+      <div class="wact"><span class="dtag">${esc(w.difficulty)}</span><button type="button" data-w="${w.id}" data-wa="${w.status==="done"?"reopen":"done"}">${w.status==="done"?"Rouvrir":"Traité ✓"}</button></div>
+    </div>`).join(""):`<p class="note" style="margin:0">Aucune demande pour l'instant.</p>`}</div>`;
+  const t=$("wToggle");if(t)t.onclick=()=>{wShowDone=!wShowDone;wRender()};
+  $("pkAdmin").querySelectorAll("button[data-w]").forEach(b=>b.onclick=async()=>{try{WREQ=(await wCall({action:b.dataset.wa,id:b.dataset.w})).requests;sfx("add");wRender()}catch(e){sfx("err")}});
+}
+async function wLoad(){
+  if(!user){$("pkAdmin").innerHTML="";return}
+  try{WREQ=(await wCall({action:"list"})).requests;wRender()}catch(e){$("pkAdmin").innerHTML=""}
+}
 $("pkLegend").innerHTML=`<b>Rareté dans la nature :</b> ${["common","uncommon","rare","ultra-rare","none"].map(rBadge).join(" ")} <span class="note">« Snack » = n'apparaît qu'avec un Poké Snack. « Pas d'apparition » = à obtenir par évolution ou reproduction.</span>`;
 fetch("data/pokemon.json").then(r=>r.json()).then(d=>{PK=d;pkRenderList()}).catch(()=>{$("pkList").innerHTML=`<p class="note">Impossible de charger la liste des Pokémon.</p>`});
 
@@ -712,7 +745,7 @@ async function lotLoad(){
 $("mc").value=store.get("tt_mc")||"";
 $("mc").addEventListener("input",()=>store.set("tt_mc",$("mc").value));
 renderCatalog();renderRecap();
-handleReturn().then(()=>{renderAuth();lotLoad()});
+handleReturn().then(()=>{renderAuth();lotLoad();wLoad()});
 }
 </script>
 </body>
