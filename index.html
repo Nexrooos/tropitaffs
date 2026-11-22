@@ -69,6 +69,7 @@ h2{font-size:clamp(14px,1.8vw,20px);margin:0 0 8px}
 .member{background:var(--card);border:3px solid #1b1f2a;border-radius:14px;padding:18px;box-shadow:0 6px 0 #1b1f2a;display:grid;gap:12px}
 .member header{position:static;display:flex;align-items:center;gap:12px;background:none;border:0;color:inherit}
 .member .ini{width:48px;height:48px;border-radius:10px;border:3px solid #1b1f2a;display:grid;place-items:center;color:#fff;font-size:16px;flex:none}
+.member img.ini{object-fit:cover;padding:0}
 .member h3{margin:0;font-size:20px}
 .chan{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:var(--bg);border:2px solid var(--line)}
 .chan .lab{font-size:13px;color:var(--mute);display:block}.chan b{font-size:16px;white-space:nowrap}
@@ -472,12 +473,12 @@ $("form").addEventListener("submit",async e=>{
 const TEAM=[
   {name:"Akumaa1702",discord:"lakaka067",mc:"Akumaa1702",color:"#3b6fd8"},
   {name:"lewoodzz",discord:"lewoodzz.",mc:"lewoodzz",color:"#1f9d55"},
-  {name:"Nexro",discord:"nexrooos",mc:"Nexro_",color:"#e3352f"}
+  {name:"Nexro",discord:"nexrooos",mc:"Nexro_",color:"#e3352f",pp:"pp-nexro.jpg"}
 ];
 const DC=`<svg width="18" height="14" viewBox="0 0 24 18" aria-hidden="true"><path fill="#fff" d="M20.3 1.5A19.6 19.6 0 0 0 15.4 0l-.6 1.3a18 18 0 0 0-5.6 0L8.6 0a19.6 19.6 0 0 0-4.9 1.5C.6 6.2-.3 10.8.1 15.3a19.8 19.8 0 0 0 6 3l1.3-2a12.7 12.7 0 0 1-2-1l.5-.4a14 14 0 0 0 12.2 0l.5.4-2 1 1.3 2a19.8 19.8 0 0 0 6-3c.5-5.2-.8-9.7-3.4-13.8ZM8 12.5c-1.2 0-2.2-1.1-2.2-2.4S6.8 7.7 8 7.7s2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Zm8 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Z"/></svg>`;
 const MCI=`<svg width="16" height="16" viewBox="0 0 8 8" aria-hidden="true" shape-rendering="crispEdges"><rect width="8" height="3" fill="#5fb04a"/><rect y="3" width="8" height="5" fill="#8a5a33"/><rect x="1" y="4" width="1" height="1" fill="#6b4426"/><rect x="5" y="6" width="1" height="1" fill="#6b4426"/></svg>`;
 $("team").innerHTML=TEAM.map(m=>`<article class="member">
-  <header><span class="ini px" style="background:${m.color}">${esc(m.name[0].toUpperCase())}</span><h3>${esc(m.name)}</h3></header>
+  <header>${m.pp?`<img class="ini" src="${m.pp}" alt="" width="48" height="48">`:`<span class="ini px" style="background:${m.color}">${esc(m.name[0].toUpperCase())}</span>`}<h3>${esc(m.name)}</h3></header>
   <div class="chan"><span class="ic" style="background:#5865f2">${DC}</span><span><span class="lab">Discord</span><b>@${esc(m.discord)}</b></span><button type="button" data-copy="${esc(m.discord)}">Copier</button></div>
   <div class="chan"><span class="ic" style="background:#3b2a1a">${MCI}</span><span><span class="lab">En jeu (Tropimon)</span><b>${esc(m.mc)}</b></span><button type="button" data-copy="${esc(m.mc)}">Copier</button></div>
 </article>`).join("");
