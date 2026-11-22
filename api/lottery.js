@@ -8,6 +8,7 @@ const crypto = require("crypto");
 
 const PRICE = 500; // prix d'un ticket en $
 const SHARE = 0.1; // part gardée par TropiTaffs (le gagnant reçoit 90 %)
+const MIN_PLAYERS = 3; // en dessous, le tirage est reporté à la semaine suivante (tickets et cagnotte gardés)
 const MAX_PER_USER = 20; // tickets max par personne et par tirage
 const DRAW_DAY = 0; // 0 = dimanche
 const DRAW_HOUR = 21; // heure de Paris
@@ -86,8 +87,18 @@ async function ensureRound() {
   if (Date.now() < round.end) return round;
 
   // Le tirage est dû : on le fait une seule fois (verrou Redis)
-  const lock = await redis(["SET", "lot:lock:" + round.id, "1", "NX", "EX", "60"]);
+  const lock = await redis(["SET", "lot:lock:" + round.id + ":" + round.end, "1", "NX", "EX", "60"]);
   if (lock !== "OK") return round;
+  const nPlayers = new Set(ticketList(round).map((b) => b.uid)).size;
+  if (nPlayers < MIN_PLAYERS) {
+    // Pas assez de joueurs : on garde tous les tickets et on repousse le tirage d'une semaine
+    round.end = nextDraw(new Date());
+    round.postponed = (round.postponed || 0) + 1;
+    await setJSON("lot:cur", round);
+    const tickets = ticketList(round).reduce((s, b) => s + b.qty, 0);
+    await announce({ content: `🎟️ Tirage n°${round.id} reporté : seulement ${nPlayers} joueur${nPlayers > 1 ? "s" : ""} sur ${MIN_PLAYERS} minimum. Les ${tickets} tickets et la cagnotte de ${fmt(tickets * PRICE)} sont gardés pour la semaine prochaine !` });
+    return round;
+  }
   const res = drawWinner(round);
   const pot = res.total * PRICE, prize = Math.floor(pot * (1 - SHARE));
   const result = {
@@ -117,8 +128,8 @@ function publicState(round, user, isAdmin, hist) {
   const pot = tickets * PRICE;
   const mine = user ? round.buys.filter((b) => b.uid === user.id).map((b) => ({ id: b.id, qty: b.qty, status: b.status, at: b.at })) : [];
   return {
-    config: { price: PRICE, share: SHARE, max: MAX_PER_USER },
-    round: { id: round.id, end: round.end, seedHash: round.seedHash, tickets, pot, prize: Math.floor(pot * (1 - SHARE)), players: new Set(paid.map((b) => b.uid)).size },
+    config: { price: PRICE, share: SHARE, max: MAX_PER_USER, minPlayers: MIN_PLAYERS },
+    round: { id: round.id, end: round.end, seedHash: round.seedHash, tickets, pot, prize: Math.floor(pot * (1 - SHARE)), players: new Set(paid.map((b) => b.uid)).size, postponed: round.postponed || 0 },
     mine, isAdmin,
     pending: isAdmin ? round.buys.filter((b) => b.status === "pending").map((b) => ({ id: b.id, name: b.name, mc: b.mc, qty: b.qty, at: b.at })) : undefined,
     last: hist[0] || null,

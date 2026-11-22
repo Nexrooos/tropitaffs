@@ -544,9 +544,11 @@ function lotRender(msg){
     <div class="lab">CAGNOTTE DU TIRAGE N°${R.id}</div>
     <div class="pot">${fmt(R.pot)}</div>
     <div style="font-weight:900;margin-top:4px">Le gagnant remporte ${fmt(R.prize)}</div>
-    <div class="tstats"><div><b>${R.tickets}</b><span>tickets payés</span></div><div><b>${R.players}</b><span>joueurs</span></div><div><b>${fmt(price)}</b><span>le ticket</span></div></div>
+    <div class="tstats"><div><b>${R.tickets}</b><span>tickets payés</span></div><div><b>${R.players}${R.players<L.config.minPlayers?" / "+L.config.minPlayers:""}</b><span>joueurs${R.players<L.config.minPlayers?" (minimum)":""}</span></div><div><b>${fmt(price)}</b><span>le ticket</span></div></div>
     <div class="cd" id="lotCd"></div>
     <div style="font-size:13px;font-weight:700;margin-top:6px">Tirage le ${date}</div>
+    ${R.players<L.config.minPlayers?`<div style="font-size:13px;margin-top:8px;padding:8px 10px;border-radius:8px;background:#1b1f2a14">Il faut au moins ${L.config.minPlayers} joueurs pour lancer le tirage. Sinon, il est reporté d'une semaine et tous les tickets restent en jeu : personne ne perd rien.</div>`:""}
+    ${R.postponed?`<div style="font-size:13px;font-weight:900;margin-top:6px">Cagnotte reportée ${R.postponed} fois : elle continue de grossir !</div>`:""}
   </div>
   <div class="lbox">
     <h3>Acheter des tickets</h3>
