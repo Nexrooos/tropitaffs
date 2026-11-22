@@ -7,7 +7,7 @@
 const crypto = require("crypto");
 
 const PRICE = 500; // prix d'un ticket en $
-const SHARE = 0.2; // part gardée par TropiTaffs
+const SHARE = 0.1; // part gardée par TropiTaffs (le gagnant reçoit 90 %)
 const MAX_PER_USER = 20; // tickets max par personne et par tirage
 const DRAW_DAY = 0; // 0 = dimanche
 const DRAW_HOUR = 21; // heure de Paris
