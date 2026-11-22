@@ -4,6 +4,7 @@ module.exports.ADMINS = [
   "390924523765104642", // Nexro
   "1403737838536757301", // Akumaa1702
   "1470525596885844080", // lewoodzz
+  "373545014594240512", // Nairfol (demandes de Pokémon, ajoutée à la demande de Nexro)
   ...(process.env.ADMIN_IDS || "").split(",").map((s) => s.trim()).filter(Boolean),
 ];
 const RURL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
