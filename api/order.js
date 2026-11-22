@@ -23,7 +23,8 @@ const clean = (s) => s.replace(/@(everyone|here)/gi, "@​$1");
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") return res.status(405).json({ error: "Méthode non autorisée" });
-  const hook = process.env.WEBHOOK_URL;
+  const hook = (process.env.WEBHOOK_URL || "").trim().replace(/^["']|["']$/g, "");
+  if (!/^https:\/\/(canary\.|ptb\.)?discord(app)?\.com\/api\/webhooks\/\d+\/[\w-]+$/.test(hook)) return res.status(503).json({ error: "Webhook mal configuré (format de WEBHOOK_URL invalide).", code: "bad_hook_format", len: hook.length });
   if (!hook) return res.status(503).json({ error: "Envoi automatique pas encore configuré." });
 
   let body = req.body;
@@ -93,9 +94,14 @@ module.exports = async (req, res) => {
         embeds: [{ title: "🛒 Nouvelle commande", color: 0xe3352f, timestamp: new Date().toISOString(), thumbnail: { url: avatar }, fields }],
       }),
     });
-    if (!r.ok) throw new Error("webhook " + r.status);
-  } catch {
-    return res.status(502).json({ error: "L'envoi vers Discord a échoué, réessaie." });
+    if (!r.ok) {
+      const detail = (await r.text().catch(() => "")).slice(0, 300);
+      console.error("webhook", r.status, detail);
+      return res.status(502).json({ error: "L'envoi vers Discord a échoué, réessaie.", code: "webhook_" + r.status, detail });
+    }
+  } catch (e) {
+    console.error("webhook fetch", e);
+    return res.status(502).json({ error: "L'envoi vers Discord a échoué, réessaie.", code: "fetch_error", detail: String(e).slice(0, 200) });
   }
   return res.status(200).json({ ok: true });
 };
