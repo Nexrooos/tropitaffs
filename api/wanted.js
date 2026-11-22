@@ -5,24 +5,19 @@ const FAMILIES = require("../data/pokemon.json");
 const BY_NUM = new Map(), FAM_OF = new Map();
 for (const fam of FAMILIES) for (const m of fam) { BY_NUM.set(m.n, m); FAM_OF.set(m.n, fam); }
 const RAR = { common: "Commun", uncommon: "Peu commun", rare: "Rare", "ultra-rare": "Ultra-rare", none: "Pas d'apparition (évolution / reproduction)" };
-const RPTS = { common: 0, uncommon: 1, rare: 2, "ultra-rare": 3, none: 2 }, IVPTS = { any: 0, good: 1, "3": 2, "4": 3, "5": 4, "6": 5 };
+const RPTS = { common: 0, uncommon: 1, rare: 2, "ultra-rare": 3, none: 2 };
+const STATS = ["PV", "Attaque", "Défense", "Atq. Spé.", "Déf. Spé.", "Vitesse"];
+const ivPoints = (iv) => Math.min(5, [0, 1, 1, 2, 3, 4, 5][iv.filter((v) => v === 31).length] + (iv.some((v) => v >= 25 && v < 31) ? 1 : 0));
 const DIFF = [[1, "Facile"], [3, "Moyen"], [5, "Difficile"], [7, "Très difficile"], [99, "Extrême"]];
 const rKey = (r) => r.replace("*", "");
 const rLabel = (r) => (RAR[rKey(r)] || RAR.none) + (r.endsWith("*") ? " (Poké Snack)" : "");
 function difficulty(n, iv, tc) {
   const fam = FAM_OF.get(n), i = fam.findIndex((m) => m.n === n);
-  const pts = Math.min(...fam.slice(0, i + 1).map((m) => RPTS[rKey(m.r)])) + IVPTS[iv] + (tc ? 2 : 0);
+  const pts = Math.min(...fam.slice(0, i + 1).map((m) => RPTS[rKey(m.r)])) + ivPoints(iv) + (tc ? 2 : 0);
   return DIFF.find((d) => pts <= d[0])[1];
 }
 
-const IVS = {
-  any: "Peu importe",
-  good: "Bons IV (toutes les stats ≥ 20)",
-  "3": "3 IV parfaits (31)",
-  "4": "4 IV parfaits (31)",
-  "5": "5 IV parfaits (31)",
-  "6": "6 IV parfaits (31)",
-};
+
 
 const str = (v, max) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 const clean = (s) => s.replace(/@(everyone|here)/gi, "@​$1");
@@ -52,17 +47,16 @@ module.exports = async (req, res) => {
   if (!/^[A-Za-z0-9_]{3,16}$/.test(mc)) return res.status(400).json({ error: "Pseudo Tropimon invalide." });
   const mon = BY_NUM.get(Number(body.n));
   if (!mon) return res.status(400).json({ error: "Pokémon inconnu." });
-  const iv = IVS[str(body.iv, 5)] ? str(body.iv, 5) : null;
-  if (!iv) return res.status(400).json({ error: "Choisis les IV souhaités." });
+  const iv = Array.isArray(body.iv) && body.iv.length === 6 ? body.iv.map((v) => Math.floor(Number(v))) : null;
+  if (!iv || iv.some((v) => !(v >= 0 && v <= 31))) return res.status(400).json({ error: "IV invalides (entre 0 et 31)." });
+  const ivText = iv.every((v) => v === 0) ? "Peu importe"
+    : STATS.map((st, i) => (iv[i] === 31 ? `**${st} 31**` : iv[i] > 0 ? `${st} ≥ ${iv[i]}` : `${st} peu importe`)).join(" · ");
 
   const ab = str(body.ability, 40);
   let talent, isTc = false;
   if (!ab || ab === "any") talent = "Peu importe";
   else if (mon.ab.includes(ab)) talent = ab;
-  else if (mon.tc && ab === mon.tc) {
-    if (!body.patch) return res.status(400).json({ error: "Le talent caché demande un Patch Talent." });
-    talent = `${ab} (talent caché, Patch Talent fourni par le joueur)`; isTc = true;
-  } else return res.status(400).json({ error: "Talent invalide pour ce Pokémon." });
+  else if (mon.tc && ab === mon.tc) { talent = `${ab} (talent caché)`; isTc = true; } else return res.status(400).json({ error: "Talent invalide pour ce Pokémon." });
 
   const price = Math.floor(Number(body.price));
   if (!(price >= 1 && price <= 100000000)) return res.status(400).json({ error: "Indique le prix que tu es prêt à mettre." });
@@ -77,7 +71,7 @@ module.exports = async (req, res) => {
     { name: "Pokémon", value: `${mon.fr} (n°${mon.n})`, inline: true },
     { name: "Rareté", value: rLabel(mon.r), inline: true },
     { name: "Difficulté estimée", value: difficulty(mon.n, iv, isTc), inline: true },
-    { name: "IV souhaités", value: IVS[iv], inline: true },
+    { name: "IV souhaités", value: ivText },
     { name: "Talent", value: talent, inline: true },
     { name: "Prix proposé", value: fmt(price), inline: true },
   ];
