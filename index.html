@@ -18,6 +18,7 @@
 --sand:light-dark(#ffe1a8,#2a3b55);--line:light-dark(#e9dcc4,#26395a);--ok:#1f9d55}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
+html{scroll-padding-top:84px}@media(prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Nunito,system-ui,sans-serif;overflow-x:clip}
 .px{font-family:"Press Start 2P",monospace;letter-spacing:0;line-height:1.5}
 .band{padding:clamp(28px,4vw,64px) max(5vw,16px)}
@@ -26,7 +27,8 @@ header{position:sticky;top:0;z-index:5;background:var(--red);color:#fff;border-b
 header .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;padding:12px max(5vw,16px)}
 .logo{font-size:14px;display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none}
 nav{display:flex;flex-wrap:wrap;gap:4px 18px;margin-left:auto;font-weight:700}
-nav a{color:#fff;text-decoration:none;padding:6px 0}nav a:hover{text-decoration:underline}
+.snd{min-width:44px;min-height:44px;border:3px solid #1b1f2a;border-radius:10px;background:#fff;font-size:18px;cursor:pointer;margin-left:6px}
+nav{align-items:center}nav a{color:#fff;text-decoration:none;padding:6px 0}nav a:hover{text-decoration:underline}
 .hero{position:relative;min-height:clamp(480px,72vh,640px);background:#ff9d5c;color:#1b1f2a;overflow:hidden;border-bottom:6px solid #1b1f2a}
 .scene{position:absolute;inset:0;width:100%;height:100%;display:block;shape-rendering:crispEdges}
 .hero .wrap{position:relative;padding:clamp(32px,6vw,80px) max(5vw,16px)}
@@ -97,7 +99,7 @@ footer a{color:#ffcf7a}
 <body>
 <header><div class="wrap">
   <a class="logo px" href="#top"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect x="2" y="2" width="24" height="24" rx="6" fill="#fff" stroke="#1b1f2a" stroke-width="3"/><path d="M8 18c4-10 8-10 12 0" stroke="#e3352f" stroke-width="3" fill="none"/><circle cx="14" cy="11" r="3" fill="#1b1f2a"/></svg>TropiTaffs</a>
-  <nav><a href="#services">Services</a><a href="#commande">Commander</a><a href="#infos">Infos</a></nav>
+  <nav><a href="#services">Services</a><a href="#commande">Commander</a><a href="#infos">Infos</a><button type="button" id="snd" class="snd" aria-pressed="true" aria-label="Couper le son">🔊</button></nav>
 </div></header>
 
 <section class="hero" id="top">
@@ -110,7 +112,7 @@ footer a{color:#ffcf7a}
       <h1 class="px">Le centre de commandes des dresseurs de Tropimon</h1>
       <p>Farm de ressources, construction de plats et commandes sur mesure, à des prix très abordables. Tu choisis, on farm, tu progresses.</p>
       <div class="hero-cta">
-        <a class="btn red" href="#commande">Passer commande</a>
+        <a class="btn red" href="#services">Passer commande</a>
         <button class="btn discord" type="button" id="loginTop">Connexion Discord</button>
       </div>
       <span class="arrow px" aria-hidden="true">▼</span>
@@ -209,6 +211,37 @@ S.insertAdjacentHTML("beforeend",o);
 
 <script>
 {
+/* ===== Petits sons rétro (Web Audio, aucun fichier) ===== */
+let AC=null,soundOn=true;
+try{soundOn=localStorage.getItem("tt_sound")!=="0"}catch{}
+const SFX={
+  up:[[660,.05],[990,.06]], down:[[520,.05],[330,.06]], tab:[[880,.04]], click:[[740,.04],[1110,.05]],
+  add:[[523,.06],[659,.06],[784,.09]], win:[[523,.08],[659,.08],[784,.08],[1047,.16]], err:[[220,.09],[165,.14]]
+};
+function sfx(name){
+  if(!soundOn||!SFX[name])return;
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    let t=AC.currentTime;
+    for(const [f,d] of SFX[name]){
+      const o=AC.createOscillator(),g=AC.createGain();
+      o.type="square";o.frequency.value=f;
+      g.gain.setValueAtTime(.06,t);g.gain.exponentialRampToValueAtTime(.001,t+d);
+      o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d);t+=d*.9;
+    }
+  }catch{}
+}
+function paintSnd(){const b=document.getElementById("snd");b.textContent=soundOn?"🔊":"🔇";b.setAttribute("aria-pressed",soundOn);b.setAttribute("aria-label",soundOn?"Couper le son":"Activer le son")}
+document.getElementById("snd").addEventListener("click",()=>{soundOn=!soundOn;try{localStorage.setItem("tt_sound",soundOn?"1":"0")}catch{};paintSnd();sfx("click")});
+paintSnd();
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button,a.btn");if(!b||b.id==="snd")return;
+  if(b.dataset.d)sfx(b.dataset.d==="1"?"up":"down");
+  else if(b.dataset.cat)sfx("tab");
+  else if(b.dataset.rm)sfx("down");
+  else if(b.type!=="submit")sfx("click");
+},true);
+
 /* ===== CONFIGURATION, à remplir ===== */
 const CONFIG = {
   DISCORD_CLIENT_ID: "1574071280351846651",            // ID de ton application sur discord.com/developers
@@ -253,10 +286,10 @@ function renderCustom(){
     </form></div>`;
   $("cform").addEventListener("submit",e=>{
     e.preventDefault();const d=$("cdesc").value.trim();
-    if(d.length<5){const m=$("cmsg");m.className="msg show err";m.textContent="Décris ta demande en quelques mots.";return}
+    if(d.length<5){const m=$("cmsg");sfx("err");m.className="msg show err";m.textContent="Décris ta demande en quelques mots.";return}
     customs.push({kind:document.querySelector('input[name=kind]:checked').value,desc:d,qty:$("cqty").value.trim(),budget:$("cbud").value.trim()});
     store.set("tt_custom",customs);renderCustom();renderRecap();
-    const m=$("cmsg");m.className="msg show ok";m.textContent="Demande ajoutée. Complète ton pseudo Tropimon plus bas et envoie la commande.";
+    const m=$("cmsg");sfx("add");m.className="msg show ok";m.textContent="Demande ajoutée. Complète ton pseudo Tropimon plus bas et envoie la commande.";
   });
 }
 function renderCatalog(){
@@ -319,7 +352,7 @@ function renderAuth(){
 }
 $("loginTop").onclick=login;
 
-function showMsg(type,html){const m=$("msg");m.className="msg show "+type;m.innerHTML=html}
+function showMsg(type,html){const m=$("msg");m.className="msg show "+type;m.innerHTML=html;sfx(type==="ok"?"win":"err")}
 
 $("form").addEventListener("submit",async e=>{
   e.preventDefault();
