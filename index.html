@@ -54,6 +54,17 @@ h2{font-size:clamp(14px,1.8vw,20px);margin:0 0 8px}
 .tabs button{min-height:44px;padding:8px 16px;border-radius:999px;border:3px solid var(--line);background:var(--card);color:var(--ink);font:700 15px Nunito;cursor:pointer}
 .tabs button[aria-pressed=true]{background:var(--sea);border-color:var(--sea);color:#fff}
 .alt{background:var(--sand)}
+.custom{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:24px;background:var(--card);border:3px solid #1b1f2a;border-radius:14px;padding:22px;box-shadow:0 6px 0 #1b1f2a}
+.custom h3{margin:0 0 6px;font-size:20px}.custom .side p{margin:0 0 12px;color:var(--mute)}
+.custom .steps{display:grid;gap:10px;margin:16px 0 0;padding:0;list-style:none}
+.custom .steps li{display:flex;gap:10px;align-items:baseline}.custom .steps b{flex:none;width:28px;height:28px;border-radius:8px;background:var(--red);color:#fff;display:grid;place-items:center;font-size:14px}
+.custom form{gap:12px}.row2{display:grid;align-items:end;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chips label{display:block}.chips input{position:absolute;opacity:0;width:1px;height:1px}
+.chips span{display:inline-flex;align-items:center;min-height:44px;padding:8px 14px;border-radius:999px;border:3px solid var(--line);background:var(--bg);color:var(--ink);font-weight:700;cursor:pointer}
+.chips input:checked+span{background:var(--sea);border-color:var(--sea);color:#fff}.chips input:focus-visible+span{outline:3px solid var(--sea);outline-offset:2px}
+.reqlist{display:grid;gap:8px;margin-top:4px}.req{display:flex;gap:10px;align-items:flex-start;padding:10px;border:2px dashed var(--line);border-radius:10px}
+.req div{flex:1}.req small{color:var(--mute)}.req button{min-height:36px;padding:4px 10px;border-radius:8px;border:2px solid var(--line);background:none;color:var(--ink);cursor:pointer}
+@media(max-width:760px){.custom,.row2{grid-template-columns:minmax(0,1fr)}}
 .order{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px;align-items:start}
 form{display:grid;gap:16px}
 label{font-weight:700;display:grid;gap:6px}
@@ -162,6 +173,7 @@ S.insertAdjacentHTML("beforeend",o);
     <button type="button" data-cat="farm" aria-pressed="true">Farm de ressources</button>
     <button type="button" data-cat="plat" aria-pressed="false">Plats sans matériaux</button>
     <button type="button" data-cat="platmat" aria-pressed="false">Plats avec matériaux</button>
+    <button type="button" data-cat="custom" aria-pressed="false">Commande personnalisée</button>
   </div>
   <div class="grid" id="catalog"></div>
   <p class="note" style="margin-top:16px">Pour tout ce qui est shulker de blocs de fer, contacte So_Clever, gros vendeur de Tropi et associé de TropiTaffs.</p>
@@ -175,7 +187,7 @@ S.insertAdjacentHTML("beforeend",o);
       <div id="authBox"></div>
       <label>Pseudo Tropimon (en jeu) *<input id="mc" name="mc" required maxlength="32" autocomplete="off" placeholder="Ex. Akumaa1702"></label>
       <label>Coordonnées ou lieu de livraison <span>Optionnel, pour les plats ou la remise en main propre</span><input id="coords" maxlength="80" placeholder="Ex. x 1200 / z -340, warp de ma base"></label>
-      <label>Commande personnalisée ou précisions <span>Projet sur mesure, délai souhaité, blocs particuliers… on te répond en MP avec un devis</span><textarea id="notes" maxlength="1000"></textarea></label>
+      <label>Précisions <span>Optionnel : délai, disponibilités pour la livraison…</span><textarea id="notes" maxlength="1000"></textarea></label>
       <div class="msg" id="msg" role="status"></div>
       <button class="btn red" type="submit" id="send">Envoyer la commande</button>
     </form>
@@ -209,7 +221,7 @@ const ITEMS = [
   {id:"verre",cat:"farm",name:"Shulker de verre",price:450,unit:""},
   {id:"mousse",cat:"farm",name:"Shulker de mousse",price:300,unit:""},
   {id:"trap",cat:"farm",name:"Shulker de trappes",price:1400,unit:""},
-  {id:"planches",cat:"farm",name:"Shulker de planches de bois",price:600,unit:""},
+  {id:"planches",cat:"farm",name:"Shulker de planches de bambou",price:600,unit:""},
   {id:"stone",cat:"farm",name:"Shulker de stone",price:500,unit:""},
   ...[[3,900],[4,1600],[5,2500],[6,3600],[7,4900]].map(([n,p])=>({id:"p"+n,cat:"plat",name:`Plat ${n}x${n}`,price:p,unit:`${n*n} chunks, sans matériaux`})),
   ...[[3,1305],[4,2320],[5,3625],[6,5220],[7,7105]].map(([n,p])=>({id:"m"+n,cat:"platmat",name:`Plat ${n}x${n}`,price:p,unit:`${n*n} chunks, matériaux classiques fournis`}))
@@ -220,9 +232,35 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 const $=id=>document.getElementById(id);
 const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch{return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}},del(k){try{localStorage.removeItem(k)}catch{}}};
 
-let cart=store.get("tt_cart")||{}, cat="farm", user=null;
+let cart=store.get("tt_cart")||{}, cat="farm", user=null, customs=store.get("tt_custom")||[];
+const KINDS=["Farm d'une autre ressource","Construction / build","Redstone / farm automatique","Autre"];
 
+function renderCustom(){
+  $("catalog").innerHTML=`<div class="custom">
+    <div class="side"><h3>Commande personnalisée</h3>
+      <p>Une ressource qui n'est pas au catalogue, un build, une farm sur mesure ? Décris ton projet, on te fait un devis adapté.</p>
+      <p>Le prix dépend de la quantité de ressources, de la taille du projet et de la difficulté du travail.</p>
+      <ul class="steps"><li><b>1</b><span>Tu décris ta demande ici</span></li><li><b>2</b><span>Akumaa t'envoie un devis en MP</span></li><li><b>3</b><span>On réalise et on te livre en jeu</span></li></ul>
+      ${customs.length?`<div class="reqlist" style="margin-top:18px"><b>Dans ta commande :</b>${customs.map((c,i)=>`<div class="req"><div><b>${esc(c.kind)}</b><br><small>${esc(c.desc)}</small></div><button type="button" data-rm="${i}" aria-label="Retirer cette demande">Retirer</button></div>`).join("")}</div>`:""}
+    </div>
+    <form id="cform" novalidate>
+      <div><b>Type de demande</b><div class="chips" style="margin-top:6px">${KINDS.map((k,i)=>`<label><input type="radio" name="kind" value="${k}" ${i?"":"checked"}><span>${k}</span></label>`).join("")}</div></div>
+      <label>Ta demande *<span>Ressource, bloc, dimensions, style… plus c'est précis, plus le devis est juste</span><textarea id="cdesc" maxlength="800" placeholder="Ex. 20 shulkers de terracotta orange, ou une maison japonaise 15x15 près de mon plat"></textarea></label>
+      <div class="row2"><label>Quantité ou taille<input id="cqty" maxlength="60" placeholder="Ex. 20 shulkers, 15x15"></label>
+      <label>Budget max <span>Optionnel</span><input id="cbud" inputmode="numeric" maxlength="12" placeholder="Ex. 10 000 $"></label></div>
+      <div class="msg" id="cmsg" role="status"></div>
+      <button class="btn red" type="submit">Ajouter à ma commande</button>
+    </form></div>`;
+  $("cform").addEventListener("submit",e=>{
+    e.preventDefault();const d=$("cdesc").value.trim();
+    if(d.length<5){const m=$("cmsg");m.className="msg show err";m.textContent="Décris ta demande en quelques mots.";return}
+    customs.push({kind:document.querySelector('input[name=kind]:checked').value,desc:d,qty:$("cqty").value.trim(),budget:$("cbud").value.trim()});
+    store.set("tt_custom",customs);renderCustom();renderRecap();
+    const m=$("cmsg");m.className="msg show ok";m.textContent="Demande ajoutée. Complète ton pseudo Tropimon plus bas et envoie la commande.";
+  });
+}
 function renderCatalog(){
+  if(cat==="custom")return renderCustom();
   $("catalog").innerHTML=ITEMS.filter(i=>i.cat===cat).map(i=>`
     <div class="card"><h3>${i.name}</h3>${i.unit?`<small>${i.unit}</small>`:""}<div class="price">${fmt(i.price)}</div>
     <div class="qty"><button type="button" data-d="-1" data-id="${i.id}" aria-label="Retirer ${i.name}">−</button>
@@ -230,10 +268,12 @@ function renderCatalog(){
 }
 function renderRecap(){
   const lines=ITEMS.filter(i=>cart[i.id]>0);
-  $("recap").innerHTML=lines.length?lines.map(i=>`<li><span>${cart[i.id]} × ${i.name}${LABEL[i.cat]}</span><b>${fmt(cart[i.id]*i.price)}</b></li>`).join(""):`<li class="empty">Rien pour l'instant. Ajoute des articles ou décris une commande personnalisée.</li>`;
+  $("recap").innerHTML=lines.length||customs.length?lines.map(i=>`<li><span>${cart[i.id]} × ${i.name}${LABEL[i.cat]}</span><b>${fmt(cart[i.id]*i.price)}</b></li>`).join("")+customs.map(c=>`<li><span>Perso : ${esc(c.kind)}${c.qty?" ("+esc(c.qty)+")":""}</span><b>Sur devis</b></li>`).join(""):`<li class="empty">Rien pour l'instant. Ajoute des articles ou décris une commande personnalisée.</li>`;
   $("total").textContent=fmt(lines.reduce((s,i)=>s+cart[i.id]*i.price,0));
 }
 $("catalog").addEventListener("click",e=>{
+  const rm=e.target.closest("button[data-rm]");
+  if(rm){customs.splice(Number(rm.dataset.rm),1);store.set("tt_custom",customs);renderCustom();renderRecap();return}
   const b=e.target.closest("button[data-id]");if(!b)return;
   const v=Math.max(0,Math.min(99,(cart[b.dataset.id]||0)+Number(b.dataset.d)));
   if(v)cart[b.dataset.id]=v;else delete cart[b.dataset.id];
@@ -289,11 +329,12 @@ $("form").addEventListener("submit",async e=>{
   if(!user&&!dcManual)return showMsg("err","Indique ton pseudo Discord.");
   if(!/^[A-Za-z0-9_]{3,16}$/.test(mc))return showMsg("err","Pseudo Tropimon invalide (3 à 16 caractères : lettres, chiffres, _).");
   const lines=ITEMS.filter(i=>cart[i.id]>0);
-  if(!lines.length&&!notes)return showMsg("err","Ta commande est vide : ajoute un article ou décris ta demande.");
+  if(!lines.length&&!customs.length)return showMsg("err","Ta commande est vide : ajoute un article ou décris ta demande.");
   const total=lines.reduce((s,i)=>s+cart[i.id]*i.price,0);
   const detail=lines.map(i=>`${cart[i.id]} × ${i.name}${LABEL[i.cat]} = ${fmt(cart[i.id]*i.price)}`).join("\n")||"Aucun article du catalogue";
+  const cdetail=customs.map(c=>`• ${c.kind}${c.qty?" ("+c.qty+")":""}${c.budget?" — budget "+c.budget:""}\n${c.desc}`).join("\n");
   const discord=user?`<@${user.id}> (@${user.name}) ✅ vérifié`:`${dcManual} (non vérifié)`;
-  const text=`Nouvelle commande TropiTaffs\nDiscord : ${user?"@"+user.name:dcManual}\nTropimon : ${mc}\n${detail}\nTotal estimé : ${fmt(total)}${coords?"\nLivraison : "+coords:""}${notes?"\nPrécisions : "+notes:""}`;
+  const text=`Nouvelle commande TropiTaffs\nDiscord : ${user?"@"+user.name:dcManual}\nTropimon : ${mc}\n${detail}${cdetail?"\nDemandes perso (sur devis) :\n"+cdetail:""}\nTotal estimé : ${fmt(total)}${customs.length?" + devis":""}${coords?"\nLivraison : "+coords:""}${notes?"\nPrécisions : "+notes:""}`;
 
   if(!CONFIG.WEBHOOK_URL){
     showMsg("ok",`Commande prête. Copie ce message et envoie-le en MP à Akumaa sur Discord :<pre>${esc(text)}</pre><button type="button" class="btn" id="copy">Copier</button>`);
@@ -307,11 +348,12 @@ $("form").addEventListener("submit",async e=>{
       embeds:[{title:"🛒 Nouvelle commande",color:0xe3352f,timestamp:new Date().toISOString(),
         thumbnail:user?{url:user.avatar}:undefined,
         fields:[{name:"Discord",value:discord,inline:true},{name:"Pseudo Tropimon",value:mc,inline:true},
-          {name:"Articles",value:detail.slice(0,1000)},{name:"Total estimé",value:fmt(total),inline:true},
+          {name:"Articles",value:detail.slice(0,1000)},...(cdetail?[{name:"Demandes personnalisées (sur devis)",value:cdetail.slice(0,1000)}]:[]),
+          {name:"Total estimé",value:fmt(total)+(customs.length?" + devis":""),inline:true},
           ...(coords?[{name:"Livraison",value:coords.slice(0,200),inline:true}]:[]),
           ...(notes?[{name:"Précisions",value:notes.slice(0,1000)}]:[])]}]})});
     if(!r.ok)throw 0;
-    cart={};store.set("tt_cart",cart);renderCatalog();renderRecap();$("notes").value="";$("coords").value="";
+    cart={};customs=[];store.set("tt_cart",cart);store.set("tt_custom",customs);renderCatalog();renderRecap();$("notes").value="";$("coords").value="";
     showMsg("ok","Commande envoyée ! Akumaa te contacte en MP sur Discord pour confirmer.");
   }catch{showMsg("err","L'envoi a échoué. Réessaie, ou envoie ta commande en MP à Akumaa.")}
   $("send").disabled=false;$("send").textContent="Envoyer la commande";
