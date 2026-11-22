@@ -185,7 +185,7 @@ S.insertAdjacentHTML("beforeend",o);
     <p class="lead" style="color:inherit">Connecte-toi avec Discord pour qu'on soit sûrs que c'est bien toi, puis indique ton pseudo Tropimon.</p>
     <form id="form" novalidate>
       <div id="authBox"></div>
-      <label>Pseudo Tropimon (en jeu) *<input id="mc" name="mc" required maxlength="32" autocomplete="off" placeholder="Ex. Akumaa1702"></label>
+      <label>Pseudo Tropimon (en jeu) *<input id="mc" name="mc" required maxlength="32" autocomplete="off" placeholder="Ex. Steve_42"></label>
       <label>Coordonnées ou lieu de livraison <span>Optionnel, pour les plats ou la remise en main propre</span><input id="coords" maxlength="80" placeholder="Ex. x 1200 / z -340, warp de ma base"></label>
       <label>Précisions <span>Optionnel : délai, disponibilités pour la livraison…</span><textarea id="notes" maxlength="1000"></textarea></label>
       <div class="msg" id="msg" role="status"></div>
@@ -202,7 +202,7 @@ S.insertAdjacentHTML("beforeend",o);
 
 <section class="band" id="infos"><div class="wrap">
   <h2 class="px">Comment ça marche</h2>
-  <p class="lead">Tu envoies ta commande ici, elle arrive directement sur notre Discord. Akumaa te contacte en MP pour confirmer le délai, puis on te livre en jeu sur Tropimon. Une question ou un devis ? Écris à TropiTaffs (Akumaa) sur Discord.</p>
+  <p class="lead">Tu envoies ta commande ici, elle arrive directement sur notre Discord. Un membre de TropiTaffs te contacte en MP pour confirmer le délai, puis on te livre en jeu sur Tropimon. Une question ou un devis ? Écris à un membre de TropiTaffs sur Discord.</p>
 </div></section>
 
 <footer class="band"><div class="wrap">TropiTaffs, service de joueurs sur le serveur Tropimon. Site non officiel, non affilié à Nintendo, The Pokémon Company ni Mojang.</div></footer>
@@ -238,15 +238,15 @@ const KINDS=["Farm d'une autre ressource","Plateforme personnalisée","Ferme à 
 function renderCustom(){
   $("catalog").innerHTML=`<div class="custom">
     <div class="side"><h3>Commande personnalisée</h3>
-      <p>Une ressource qui n'est pas au catalogue, un build, une farm sur mesure ? Décris ton projet, on te fait un devis adapté.</p>
+      <p>Une ressource qui n'est pas au catalogue, une plateforme sur mesure, une ferme à fer ? Décris ton projet, on te fait un devis adapté.</p>
       <p>Le prix dépend de la quantité de ressources, de la taille du projet et de la difficulté du travail.</p>
-      <ul class="steps"><li><b>1</b><span>Tu décris ta demande ici</span></li><li><b>2</b><span>Akumaa t'envoie un devis en MP</span></li><li><b>3</b><span>On réalise et on te livre en jeu</span></li></ul>
+      <ul class="steps"><li><b>1</b><span>Tu décris ta demande ici</span></li><li><b>2</b><span>On t'envoie un devis en MP</span></li><li><b>3</b><span>On réalise et on te livre en jeu</span></li></ul>
       ${customs.length?`<div class="reqlist" style="margin-top:18px"><b>Dans ta commande :</b>${customs.map((c,i)=>`<div class="req"><div><b>${esc(c.kind)}</b><br><small>${esc(c.desc)}</small></div><button type="button" data-rm="${i}" aria-label="Retirer cette demande">Retirer</button></div>`).join("")}</div>`:""}
     </div>
     <form id="cform" novalidate>
       <div><b>Type de demande</b><div class="chips" style="margin-top:6px">${KINDS.map((k,i)=>`<label><input type="radio" name="kind" value="${k}" ${i?"":"checked"}><span>${k}</span></label>`).join("")}</div></div>
-      <label>Ta demande *<span>Ressource, bloc, dimensions, style… plus c'est précis, plus le devis est juste</span><textarea id="cdesc" maxlength="800" placeholder="Ex. 20 shulkers de terracotta orange, ou une maison japonaise 15x15 près de mon plat"></textarea></label>
-      <div class="row2"><label>Quantité ou taille<input id="cqty" maxlength="60" placeholder="Ex. 20 shulkers, 15x15"></label>
+      <label>Ta demande *<span>Ressources, blocs, quantités… plus c'est précis, plus le devis est juste</span><textarea id="cdesc" maxlength="800" placeholder="Ex. 20 shulkers de terracotta orange, 10 shulkers de quartz"></textarea></label>
+      <div class="row2"><label>Quantité ou taille<input id="cqty" maxlength="60" placeholder="Ex. 20 shulkers"></label>
       <label>Budget max <span>Optionnel</span><input id="cbud" inputmode="numeric" maxlength="12" placeholder="Ex. 10 000 $"></label></div>
       <div class="msg" id="cmsg" role="status"></div>
       <button class="btn red" type="submit">Ajouter à ma commande</button>
@@ -337,7 +337,7 @@ $("form").addEventListener("submit",async e=>{
   const text=`Nouvelle commande TropiTaffs\nDiscord : ${user?"@"+user.name:dcManual}\nTropimon : ${mc}\n${detail}${cdetail?"\nDemandes perso (sur devis) :\n"+cdetail:""}\nTotal estimé : ${fmt(total)}${customs.length?" + devis":""}${coords?"\nLivraison : "+coords:""}${notes?"\nPrécisions : "+notes:""}`;
 
   if(!CONFIG.WEBHOOK_URL){
-    showMsg("ok",`Commande prête. Copie ce message et envoie-le en MP à Akumaa sur Discord :<pre>${esc(text)}</pre><button type="button" class="btn" id="copy">Copier</button>`);
+    showMsg("ok",`Commande prête. Copie ce message et envoie-le en MP à un membre de TropiTaffs sur Discord :<pre>${esc(text)}</pre><button type="button" class="btn" id="copy">Copier</button>`);
     $("copy").onclick=async()=>{try{await navigator.clipboard.writeText(text);$("copy").textContent="Copié !"}catch{$("copy").textContent="Sélectionne le texte pour copier"}};
     return;
   }
@@ -354,8 +354,8 @@ $("form").addEventListener("submit",async e=>{
           ...(notes?[{name:"Précisions",value:notes.slice(0,1000)}]:[])]}]})});
     if(!r.ok)throw 0;
     cart={};customs=[];store.set("tt_cart",cart);store.set("tt_custom",customs);renderCatalog();renderRecap();$("notes").value="";$("coords").value="";
-    showMsg("ok","Commande envoyée ! Akumaa te contacte en MP sur Discord pour confirmer.");
-  }catch{showMsg("err","L'envoi a échoué. Réessaie, ou envoie ta commande en MP à Akumaa.")}
+    showMsg("ok","Commande envoyée ! Un membre de TropiTaffs te contacte en MP sur Discord pour confirmer.");
+  }catch{showMsg("err","L'envoi a échoué. Réessaie, ou envoie ta commande en MP à un membre de TropiTaffs.")}
   $("send").disabled=false;$("send").textContent="Envoyer la commande";
 });
 
