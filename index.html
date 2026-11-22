@@ -35,7 +35,7 @@ nav{display:flex;flex-wrap:wrap;gap:4px 18px;margin-left:auto;font-weight:700}
 .hero-me{display:inline-flex;align-items:center;gap:10px;font-weight:900}.hero-me img{width:40px;height:40px;border-radius:50%;border:3px solid #1b1f2a}
 .snd{min-width:44px;min-height:44px;border:3px solid #1b1f2a;border-radius:10px;background:#fff;font-size:18px;cursor:pointer;margin-left:6px}
 nav{align-items:center}nav a{color:#fff;text-decoration:none;padding:6px 0}nav a:hover{text-decoration:underline}
-.hero{position:relative;min-height:clamp(480px,72vh,640px);background:#78c850;color:#1b1f2a;overflow:hidden;border-bottom:6px solid #1b1f2a}
+.hero{position:relative;min-height:clamp(480px,72vh,640px);background:#d8d4c8;color:#1b1f2a;overflow:hidden;border-bottom:6px solid #1b1f2a}
 .scene{position:absolute;inset:0;width:100%;height:100%;display:block;shape-rendering:crispEdges}
 .hero .wrap{position:relative;padding:clamp(32px,6vw,80px) max(5vw,16px)}
 .dialog{max-width:540px;background:#fff;border:4px solid #1b1f2a;border-radius:6px;box-shadow:inset 0 0 0 4px #fff,inset 0 0 0 7px #3b6fd8,0 8px 0 rgba(0,0,0,.35);padding:26px 26px 22px;position:relative}
@@ -109,7 +109,7 @@ footer a{color:#ffcf7a}
 </div></header>
 
 <section class="hero" id="top">
-  <svg class="scene" id="scene" viewBox="0 0 1200 600" preserveAspectRatio="xMaxYMin slice" role="img" aria-label="Chantier TropiTaffs en pixel art façon jeu rétro, avec une grue, un immeuble en construction et des hautes herbes">
+  <svg class="scene" id="scene" viewBox="0 0 1200 600" preserveAspectRatio="xMaxYMin slice" role="img" aria-label="Chantier TropiTaffs en pixel art façon jeu rétro, au milieu d'une petite ville, avec une grue et un immeuble en construction">
     
   </svg>
   <div class="wrap">
@@ -128,45 +128,53 @@ footer a{color:#ffcf7a}
 <script>
 {
 const S=document.getElementById("scene");let o="";
-/* Tout est dessiné sur une grille de pixels 300x150, agrandie x4 */
+/* Grille de pixels 300x150, agrandie x4 */
 const R=(x,y,w,h,c)=>{o+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`};
-const OUT="#283028";
+const OUT="#283038";
 function spr(rows,pal,x0,y0){rows.forEach((row,y)=>{let x=0;while(x<row.length){const ch=row[x];if(ch==="."){x++;continue}let n=1;while(row[x+n]===ch)n++;R(x0+x,y0+y,n,1,pal[ch]);x+=n}})}
 function box(x,y,w,h,fill){R(x-1,y-1,w+2,h+2,OUT);R(x,y,w,h,fill)}
-/* herbe */
-R(0,0,300,150,"#78c850");
-for(let ty=0;ty<150;ty+=8)for(let tx=0;tx<300;tx+=8){const k=(tx*7+ty*13)%5;if(k===0){R(tx+2,ty+3,1,2,"#a0e070");R(tx+4,ty+2,1,3,"#a0e070")}else if(k===2)R(tx+5,ty+5,2,1,"#60b040")}
-/* chemin de sable */
-R(0,112,300,13,"#d8b870");R(0,113,300,11,"#f0d898");for(let x=4;x<300;x+=11)R(x,117+(x%3),2,1,"#d8c080");
-R(196,100,18,14,"#d8b870");R(197,100,16,14,"#f0d898");
+function win(x,y,w,h){box(x,y,w,h,"#68a8f0");R(x,y,Math.max(2,w>>2),h,"#a8d8f8");R(x,y+(h>>1),w,1,"#f8f8f8")}
+/* trottoirs pavés */
+R(0,0,300,150,"#d8d4c8");
+for(let y=0;y<150;y+=8)R(0,y,300,1,"#c4bfb2");
+for(let y=0,i=0;y<150;y+=8,i++)for(let x=(i%2)*8;x<300;x+=16)R(x,y,1,8,"#c4bfb2");
+/* rue */
+R(0,110,300,2,"#a8a49a");R(0,112,300,20,"#5c6470");R(0,132,300,2,"#a8a49a");
+for(let x=4;x<300;x+=20)if(x+10<196||x>216)R(x,121,10,2,"#f0f0e8");
+/* passage piéton devant le chantier */
+for(let x=198;x<214;x+=4)R(x,113,2,18,"#f0f0e8");
+/* maisons de la ville (fond) */
+function house(x,y,w,h,roof,dark){
+  box(x-2,y,w+4,12,roof);for(let r=y+3;r<y+12;r+=3)R(x-2,r,w+4,1,dark);R(x-2,y,w+4,2,"#ffffff55");
+  box(x,y+12,w,h,"#f8f0dc");R(x,y+12+h-2,w,2,"#e0d4b8");
+  const dx=x+(w>>1)-4;box(dx,y+12+h-11,8,11,"#8a5a30");R(dx+1,y+13+h-11,6,9,"#a87040");
+  for(let wx=x+3;wx+9<=x+w-2;wx+=w>36?14:w-12)if(Math.abs(wx+4-(dx+4))>8)win(wx,y+16,8,7);
+}
+house(2,4,34,22,"#e05848","#b03828");
+house(46,8,40,20,"#4878d8","#2850a8");
+house(96,2,30,24,"#48a860","#2f7a40");
+house(4,52,30,20,"#f0a030","#c07818");
+house(48,56,40,18,"#a060c8","#783e98");
+/* petits arbres en bac */
+const TR=["..oooo..",".ollggo.","olgggggo","oggggddo",".oddddo.","..otTo..","oPPPPPPo","oppppppo","oooooooo"],trp={o:OUT,l:"#90d868",g:"#58a848",d:"#387838",t:"#a06838",T:"#704820",P:"#b0a898",p:"#908878"};
+[[110,96],[132,96],[20,136],[70,136],[250,136],[150,136]].forEach(([x,y])=>spr(TR,trp,x,y));
+/* lampadaires */
+const LP=[".ooo.","oyyyo",".ooo.","..o..","..o..","..o..","..o..","..o..","..o..",".ooo."],lpp={o:"#384048",y:"#f8e070"};
+[[96,94],[184,94],[288,98],[40,134],[200,134]].forEach(([x,y])=>spr(LP,lpp,x,y));
 /* terrain du chantier */
 box(150,44,150,58,"#d0a060");for(let i=0;i<60;i++)R(152+(i*37)%144,46+(i*23)%54,2,1,i%2?"#b88848":"#e0b878");
-/* hautes herbes */
-const TG=["..o...o.",".oGo.oGo","oGgGoGgG","GggGGggG","gGgggGgg","dddddddd"],tgp={o:"#205020",G:"#38a040",g:"#50c050",d:"#2f7a30"};
-for(let gy=60;gy<104;gy+=6)for(let gx=104;gx<146;gx+=8)spr(TG,tgp,gx,gy);
-/* fleurs */
-const FL=[".r.",
-"rwr",".r."],flp={r:"#f05050",w:"#fff8d0"};
-[[20,100],[60,130],[130,132],[240,134],[280,130],[90,104],[30,136]].forEach(([x,y],i)=>spr(FL,i%2?{r:"#f8f8f8",w:"#f8d030"}:flp,x,y));
-/* arbres */
-const TREE=["....oooooooo....","..oolllgggggoo..",".olllllggggggdo.",".ollllgggggggdo.","olllgggggggggddo","ollggggggggggddo","oggggggggggdgddo","ogggggggggdgdddo","oggggggdgggddddo",".ogggggggdddddo.",".odgggdgddddddo.","..oddddddddddo..","...oooddddooo...","......otto......","......otTo......",".....oottToo....","...ssssssssss..."];
-const tp={o:OUT,l:"#90d868",g:"#58a848",d:"#387838",t:"#a06838",T:"#704820",s:"#60b040"};
-[[2,2],[20,0],[38,4],[56,0],[74,3],[92,0],[110,2],[128,0],[0,124],[160,128],[178,131],[268,128],[284,126]].forEach(([x,y])=>spr(TREE,tp,x,y));
 /* clôture jaune et noire */
 function fenceH(x1,x2,y){for(let x=x1,i=0;x<x2;x+=4,i++)R(x,y,4,3,i%2?"#202020":"#f8c830");R(x1,y-1,x2-x1,1,OUT);R(x1,y+3,x2-x1,1,OUT);for(let x=x1;x<=x2;x+=24)box(x,y-3,2,8,"#909098")}
 function fenceV(x,y1,y2){for(let y=y1,i=0;y<y2;y+=4,i++)R(x,y,3,4,i%2?"#202020":"#f8c830");R(x-1,y1,1,y2-y1,OUT);R(x+3,y1,1,y2-y1,OUT)}
-fenceH(150,300,42);fenceV(148,42,104);
+fenceH(150,300,42);fenceV(148,42,104);fenceH(150,196,104);fenceH(214,300,104);
 /* immeuble en construction (vue 3/4) */
 const bx=166,by=58,bw=72;
-box(bx,by-8,bw,8,"#b0b8c0");R(bx,by-8,bw,2,"#d8e0e8");                 /* dalle du toit */
-box(bx,by,bw,22,"#c8ccd0");                                            /* étage en structure */
-for(let c=0;c<=4;c++)box(bx+c*17,by,3,22,"#8890a0");
-R(bx,by+10,bw,2,"#8890a0");
-box(bx,by,34,22,"#f8e8c8");for(let k=0;k<34;k+=6)R(bx+k,by+21,3,1,"#e0c8a0"); /* moitié de l'étage déjà murée */
-[[bx+4,by+5],[bx+19,by+5]].forEach(([x,y])=>{box(x,y,11,9,"#68a8f0");R(x,y,4,9,"#a8d8f8");R(x,y+4,11,1,"#f8f8f8")});
-box(bx,by+22,bw,22,"#f8e8c8");                                         /* rez-de-chaussée */
-R(bx,by+22,bw,3,"#e04838");R(bx,by+25,bw,1,"#a83028");
-[[bx+4,by+29],[bx+55,by+29]].forEach(([x,y])=>{box(x,y,12,9,"#68a8f0");R(x,y,4,9,"#a8d8f8");R(x,y+4,12,1,"#f8f8f8")});
+box(bx,by-8,bw,8,"#b0b8c0");R(bx,by-8,bw,2,"#d8e0e8");
+box(bx,by,bw,22,"#c8ccd0");for(let c=0;c<=4;c++)box(bx+c*17,by,3,22,"#8890a0");R(bx,by+10,bw,2,"#8890a0");
+box(bx,by,34,22,"#f8e8c8");
+win(bx+4,by+5,11,9);win(bx+19,by+5,11,9);
+box(bx,by+22,bw,22,"#f8e8c8");R(bx,by+22,bw,3,"#e04838");R(bx,by+25,bw,1,"#a83028");
+win(bx+4,by+29,12,9);win(bx+55,by+29,12,9);
 box(bx+29,by+30,14,14,"#8a5a30");R(bx+31,by+32,10,12,"#a87040");R(bx+38,by+38,2,2,"#f8d030");
 /* échafaudage */
 for(const px of [bx-10,bx-4])box(px,by-6,2,50,"#c08838");
@@ -175,23 +183,20 @@ for(let f=0;f<4;f++)box(bx-12,by-2+f*12,12,2,"#906028");
 const gx=266;
 for(let y=12;y<102;y+=6){box(gx,y,10,6,"#f8c030");R(gx+2,y+1,6,4,"#c89010");R(gx+((y/6)%2?2:5),y+1,3,4,"#f8c030")}
 box(gx-4,100,18,4,"#808890");
-box(142,8,156,5,"#f8c030");for(let x=144;x<296;x+=6){R(x,9,3,3,"#c89010")}
+box(142,8,156,5,"#f8c030");for(let x=144;x<296;x+=6)R(x,9,3,3,"#c89010");
 box(286,13,12,9,"#707880");R(286,13,12,2,"#9098a0");
 box(gx-1,1,12,8,"#f8c030");box(gx+1,2,8,5,"#88c8f0");R(gx+1,2,3,5,"#c8e8f8");
-R(gx+4,13,4,6,"#e04838");
-o+=`<g class="bob">`;let o2=o;o="";
 R(203,13,1,22,"#303030");box(200,34,7,2,"#606870");
 const SH=["oooooooooo","orrrrrrrro","orrrrrrrro","oRRRRRRRRo","owwwwwwwwo","owwwkkwwwo","owwwwwwwwo","oggggggggo","oooooooooo"],shp={o:OUT,r:"#f05040",R:"#c03028",w:"#f8f8f8",k:"#303030",g:"#c8c8d0"};
 spr(SH,shp,199,37);
-o=o2+o+`</g>`;
-/* caisses et shulkers posés */
+/* shulkers posés */
 [[244,88],[255,88],[249,79]].forEach(([x,y])=>spr(SH,shp,x,y));
-/* plots */
+/* plots, sur la terre du chantier */
 const CO=["..oo..","..OO..",".oWWo.",".OOOO.","oWWWWo","OOOOOO","oooooo"],cop={o:OUT,O:"#f87820",W:"#f8f8f8"};
-[[158,94],[226,96],[288,94],[180,90]].forEach(([x,y])=>spr(CO,cop,x,y));
+[[244,60],[282,92],[284,66]].forEach(([x,y])=>spr(CO,cop,x,y));
 /* panneau TT */
-box(216,101,16,9,"#c08848");R(217,102,14,7,"#e8c890");box(223,110,2,3,"#805028");
-S.innerHTML=`<g transform="scale(4)">${o}</g><text x="896" y="434" text-anchor="middle" font-family="'Press Start 2P',monospace" font-size="16" fill="#c03028">TT</text>`;
+box(216,96,16,9,"#c08848");R(217,97,14,7,"#e8c890");box(223,105,2,4,"#805028");
+S.innerHTML=`<g transform="scale(4)">${o}</g><text x="896" y="414" text-anchor="middle" font-family="'Press Start 2P',monospace" font-size="16" fill="#c03028">TT</text>`;
 }
 </script>
 
