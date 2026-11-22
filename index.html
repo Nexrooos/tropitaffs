@@ -309,6 +309,7 @@ const ITEMS = [
   {id:"trap",cat:"farm",name:"Shulker de trappes en bambou",price:1400,unit:""},
   {id:"planches",cat:"farm",name:"Shulker de planches de bambou",price:600,unit:""},
   {id:"stone",cat:"farm",name:"Shulker de stone",price:500,unit:""},
+  {id:"bisball",cat:"farm",name:"Shulker de Bis Ball",price:1000,unit:"Maximum 10 shulkers par personne",max:10},
   ...[[3,900],[4,1600],[5,2500],[6,3600],[7,4900]].map(([n,p])=>({id:"p"+n,cat:"plat",name:`Plat ${n}x${n}`,price:p,unit:`${n*n} chunks, sans matériaux`})),
   ...[[3,1305],[4,2320],[5,3625],[6,5220],[7,7105]].map(([n,p])=>({id:"m"+n,cat:"platmat",name:`Plat ${n}x${n}`,price:p,unit:`${n*n} chunks, matériaux classiques fournis`}))
 ];
@@ -384,7 +385,9 @@ $("catalog").addEventListener("click",e=>{
   const rm=e.target.closest("button[data-rm]");
   if(rm){customs.splice(Number(rm.dataset.rm),1);store.set("tt_custom",customs);renderCustom();renderRecap();return}
   const b=e.target.closest("button[data-id]");if(!b)return;
-  const v=Math.max(0,Math.min(99,(cart[b.dataset.id]||0)+Number(b.dataset.d)));
+  const it=ITEMS.find(i=>i.id===b.dataset.id),mx=it&&it.max||99;
+  if(Number(b.dataset.d)>0&&(cart[b.dataset.id]||0)>=mx){sfx("err");return}
+  const v=Math.max(0,Math.min(mx,(cart[b.dataset.id]||0)+Number(b.dataset.d)));
   if(v)cart[b.dataset.id]=v;else delete cart[b.dataset.id];
   store.set("tt_cart",cart);renderCatalog();renderRecap();
 });

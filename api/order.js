@@ -10,6 +10,7 @@ const CATALOG = {
   trap: ["Shulker de trappes en bambou", 1400],
   planches: ["Shulker de planches de bambou", 600],
   stone: ["Shulker de stone", 500],
+  bisball: ["Shulker de Bis Ball", 1000, 10],
 };
 for (const [n, [sans, avec]] of Object.entries(PLATS)) {
   CATALOG["p" + n] = [`Plat ${n}x${n} (sans matériaux)`, sans];
@@ -56,8 +57,9 @@ module.exports = async (req, res) => {
     const item = CATALOG[id];
     const qty = Math.floor(Number(q));
     if (!item || !(qty >= 1 && qty <= 99)) continue;
+    if (item[2] && qty > item[2]) return res.status(400).json({ error: `Maximum ${item[2]} × ${item[0]} par personne.` });
     total += qty * item[1];
-    if (/^[pm]\d$/.test(id)) platTotal += qty * item[1]; else farmTotal += qty * item[1];
+    if (/^[pm]\d$/.test(id)) platTotal += qty * item[1]; else if (id !== "bisball") farmTotal += qty * item[1]; /* 0 % sur la Bis Ball */
     lines.push(`${qty} × ${item[0]} = ${fmt(qty * item[1])}`);
   }
   const customs = (Array.isArray(body.customs) ? body.customs : []).slice(0, 5).map((c) => ({
