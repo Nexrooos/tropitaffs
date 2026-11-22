@@ -317,7 +317,7 @@ S.innerHTML=`<g transform="scale(4)">${o}</g><text x="896" y="414" text-anchor="
   <div id="pkForm"></div>
   <div class="pklist" id="pkList"><p class="note">Chargement de la liste…</p></div>
   <div style="text-align:center;margin-top:14px"><button type="button" class="btn" id="pkMore" hidden>Afficher plus de familles</button></div>
-  <p class="note" style="margin-top:14px">Liste des Pokémon disponibles dans Cobblemon 1.8.4, regroupés par famille d'évolution, sans les légendaires ni les fabuleux.</p>
+  <p class="note" style="margin-top:14px">« › » = évolution, « / » = forme régionale du Pokémon juste avant. Liste des Pokémon disponibles dans Cobblemon 1.8.4, regroupés par famille d'évolution avec leurs formes régionales (Alola, Galar, Hisui, Paldea), sans les légendaires ni les fabuleux.</p>
 </div></section>
 
 <section class="band lot" id="loterie"><div class="wrap">
@@ -577,8 +577,8 @@ const RPTS={common:0,uncommon:1,rare:2,"ultra-rare":3,none:2};
 const STATS=["PV","Attaque","Défense","Atq. Spé.","Déf. Spé.","Vitesse"];
 function ivPoints(iv){const p=iv.filter(v=>v===31).length,hi=iv.some(v=>v>=25&&v<31);return Math.min(5,[0,1,1,2,3,4,5][p]+(hi?1:0))}
 const DIFF=[[1,"Facile","#2f9e55"],[3,"Moyen","#3b6fd8"],[5,"Difficile","#8e44c9"],[7,"Très difficile","#d9730d"],[99,"Extrême","#e3352f"]];
-function pkDifficulty(fam,n,iv,tc){
-  const i=fam.findIndex(m=>m.n===n);const easiest=Math.min(...fam.slice(0,i+1).map(m=>RPTS[rKey(m.r)]));
+function pkDifficulty(fam,id,iv,tc){
+  const i=fam.findIndex(m=>m.id===id);const easiest=Math.min(...fam.slice(0,i+1).map(m=>RPTS[rKey(m.r)]));
   const pts=easiest+ivPoints(iv)+(tc?2:0);const d=DIFF.find(x=>pts<=x[0]);return{pts,label:d[1],color:d[2],pct:Math.min(100,Math.round((pts+1)/11*100))};
 }
 
@@ -587,7 +587,7 @@ const fold=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 function pkFiltered(){const q=fold($("pkQ").value.trim());return q?PK.filter(f=>f.some(m=>fold(m.fr).includes(q)||fold(m.en).includes(q)||String(m.n)===q)):PK}
 function pkRenderList(){
   const L=pkFiltered();$("pkCount").textContent=`${L.length} famille${L.length>1?"s":""}`;
-  $("pkList").innerHTML=L.slice(0,pkShown).map(f=>{const i=PK.indexOf(f);return `<div class="fam${pkSel===i?" on":""}"><div class="chain">${f.map(m=>`<span>${esc(m.fr)} <span class="num">#${m.n}</span> ${rBadge(m.r)}</span>`).join("<i>›</i>")}</div><button type="button" data-fam="${i}">Faire une demande</button></div>`}).join("")||`<p class="note">Aucun Pokémon trouvé. Il n'est peut-être pas encore dans Cobblemon, ou c'est un légendaire.</p>`;
+  $("pkList").innerHTML=L.slice(0,pkShown).map(f=>{const i=PK.indexOf(f);return `<div class="fam${pkSel===i?" on":""}"><div class="chain">${f.map((m,j)=>(j?(m.reg?"<i>/</i>":"<i>›</i>"):"")+`<span>${esc(m.fr)} <span class="num">#${m.n}</span> ${rBadge(m.r)}</span>`).join("")}</div><button type="button" data-fam="${i}">Faire une demande</button></div>`}).join("")||`<p class="note">Aucun Pokémon trouvé. Il n'est peut-être pas encore dans Cobblemon, ou c'est un légendaire.</p>`;
   $("pkMore").hidden=L.length<=pkShown;
 }
 function pkRenderForm(msg){
@@ -596,7 +596,7 @@ function pkRenderForm(msg){
   $("pkForm").innerHTML=`<form class="pkform" id="pkF" novalidate>
     <h3>Ta demande : famille ${esc(fam[0].fr)}</h3>
     ${user?"":`<p class="msg show err" style="margin:0">Connecte-toi avec Discord pour envoyer ta demande. <button type="button" class="linkbtn" id="pkLogin">Connexion</button></p>`}
-    <label>Pokémon voulu *<select id="pkMon">${fam.map(m=>`<option value="${m.n}">${esc(m.fr)}</option>`).join("")}</select></label>
+    <label>Pokémon voulu *<select id="pkMon">${fam.map(m=>`<option value="${m.id}">${esc(m.fr)}</option>`).join("")}</select></label>
     <div><b>IV souhaités *</b><span class="hint" style="display:block">Clique sur « 31 » pour une stat parfaite, sinon indique le minimum que tu acceptes (0 = peu importe). Plus tu es exigeant, plus c'est long à obtenir.</span>
         <div class="ivgrid">${STATS.map((st,i)=>`<div class="ivc"><span>${st}</span><div class="ivrow"><input type="number" min="0" max="31" value="0" inputmode="numeric" data-iv="${i}" aria-label="IV minimum ${st}"><button type="button" class="iv31" data-iv31="${i}">31</button></div></div>`).join("")}</div>
         <div class="ivq"><button type="button" class="linkbtn" data-ivall="0">Tout à 0</button> · <button type="button" class="linkbtn" data-ivall="31">Tout à 31</button></div></div>
@@ -611,13 +611,13 @@ function pkRenderForm(msg){
     <div class="msg ${msg?"show "+msg[0]:""}" role="status">${msg?esc(msg[1]):""}</div>
     <div class="row" style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn red" type="submit">Envoyer ma demande</button><button class="btn" type="button" id="pkCancel">Annuler</button></div>
   </form>`;
-  const syncAb=()=>{const m=fam.find(x=>x.n==$("pkMon").value),prev=$("pkAb").value;
+  const syncAb=()=>{const m=fam.find(x=>x.id===$("pkMon").value),prev=$("pkAb").value;
     $("pkAb").innerHTML=`<option value="any">Peu importe</option>`+m.ab.map(a=>`<option>${esc(a)}</option>`).join("")+(m.tc?`<option value="${esc(m.tc)}">TC : ${esc(m.tc)} (talent caché)</option>`:"");
     if([...$("pkAb").options].some(o=>o.value===prev))$("pkAb").value=prev;
     $("pkAbHint").textContent=(m.ab.length>1?`${m.ab.join(" et ")} s'échangent avec une Capsule Talent. `:"")+(m.tc?`Le talent caché (${m.tc}) ne s'obtient pas comme ça, il augmente pas mal la difficulté.`:"");};
   const getIv=()=>[...$("pkF").querySelectorAll("input[data-iv]")].map(x=>Math.max(0,Math.min(31,parseInt(x.value,10)||0)));
   const paintIv=()=>$("pkF").querySelectorAll("input[data-iv]").forEach(x=>{const b=$("pkF").querySelector(`[data-iv31="${x.dataset.iv}"]`);b.classList.toggle("on",(parseInt(x.value,10)||0)===31)});
-  const syncDiff=()=>{const n=Number($("pkMon").value),m=fam.find(x=>x.n===n),tc=!!m.tc&&$("pkAb").value===m.tc,d=pkDifficulty(fam,n,getIv(),tc);
+  const syncDiff=()=>{const id=$("pkMon").value,m=fam.find(x=>x.id===id),tc=!!m.tc&&$("pkAb").value===m.tc,d=pkDifficulty(fam,id,getIv(),tc);
     $("pkDiff").innerHTML=`<div>Rareté de ${esc(m.fr)} : ${rBadge(m.r)}</div><div>Difficulté estimée : <b style="color:${d.color}">${d.label}</b></div><div class="bar"><i style="width:${d.pct}%;background:${d.color}"></i></div>
       <span class="hint">Calculée avec la rareté (la forme la plus facile à trouver de la famille jusqu'à ce Pokémon), les IV demandés${tc?" et le talent caché (TC), qui augmente pas mal la difficulté":""}.</span>`;};
   $("pkMon").onchange=()=>{syncAb();syncDiff()};$("pkAb").onchange=syncDiff;
@@ -634,12 +634,12 @@ function pkRenderForm(msg){
     const price=parseInt($("pkPrice").value.replace(/\D/g,""),10),mc=$("pkMc").value.trim();
     if(!(price>0)){sfx("err");$("pkPrice").focus();return}
     if(!/^[A-Za-z0-9_]{3,16}$/.test(mc)){sfx("err");$("pkMc").focus();return}
-    const payload={token:user.token,n:Number($("pkMon").value),iv:getIv(),ability:$("pkAb").value,price,mc,notes:$("pkNotes").value};
+    const payload={token:user.token,id:$("pkMon").value,iv:getIv(),ability:$("pkAb").value,price,mc,notes:$("pkNotes").value};
     const btn=e.submitter||$("pkF").querySelector("button[type=submit]");btn.disabled=true;btn.textContent="Envoi…";
     try{const r=await fetch("/api/wanted",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});const d=await r.json().catch(()=>({}));
       if(r.status===401){user=null;store.del("tt_user");renderAuth()}
       if(!r.ok)throw new Error(d.error||"L'envoi a échoué.");
-      sfx("win");const name=PK[pkSel].find(m=>m.n===payload.n).fr;wLoad();pkSel=null;pkRenderList();
+      sfx("win");const name=PK[pkSel].find(m=>m.id===payload.id).fr;wLoad();pkSel=null;pkRenderList();
       $("pkForm").innerHTML=`<p class="msg show ok">Demande pour ${esc(name)} envoyée ! On te recontacte sur Discord si jamais on l'a. Rien n'est promis.</p>`;
     }catch(err){sfx("err");pkRenderForm(["err",err.message])}
   });

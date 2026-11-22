@@ -4,8 +4,8 @@ const FAMILIES = require("../data/pokemon.json");
 const { ADMINS, redis } = require("./_team.js");
 const crypto = require("crypto");
 
-const BY_NUM = new Map(), FAM_OF = new Map();
-for (const fam of FAMILIES) for (const m of fam) { BY_NUM.set(m.n, m); FAM_OF.set(m.n, fam); }
+const BY_ID = new Map(), FAM_OF = new Map();
+for (const fam of FAMILIES) for (const m of fam) { BY_ID.set(m.id, m); FAM_OF.set(m.id, fam); }
 const RAR = { common: "Commun", uncommon: "Peu commun", rare: "Rare", "ultra-rare": "Ultra-rare", none: "Pas d'apparition (évolution, œuf ou fossile)" };
 const RPTS = { common: 0, uncommon: 1, rare: 2, "ultra-rare": 3, none: 2 };
 const STATS = ["PV", "Attaque", "Défense", "Atq. Spé.", "Déf. Spé.", "Vitesse"];
@@ -13,8 +13,8 @@ const ivPoints = (iv) => Math.min(5, [0, 1, 1, 2, 3, 4, 5][iv.filter((v) => v ==
 const DIFF = [[1, "Facile"], [3, "Moyen"], [5, "Difficile"], [7, "Très difficile"], [99, "Extrême"]];
 const rKey = (r) => r.replace("*", "");
 const rLabel = (r) => (RAR[rKey(r)] || RAR.none) + (r.endsWith("*") ? " (Poké Snack)" : "");
-function difficulty(n, iv, tc) {
-  const fam = FAM_OF.get(n), i = fam.findIndex((m) => m.n === n);
+function difficulty(id, iv, tc) {
+  const fam = FAM_OF.get(id), i = fam.findIndex((m) => m.id === id);
   const pts = Math.min(...fam.slice(0, i + 1).map((m) => RPTS[rKey(m.r)])) + ivPoints(iv) + (tc ? 2 : 0);
   return DIFF.find((d) => pts <= d[0])[1];
 }
@@ -64,7 +64,7 @@ module.exports = async (req, res) => {
 
   const mc = str(body.mc, 16);
   if (!/^[A-Za-z0-9_]{3,16}$/.test(mc)) return res.status(400).json({ error: "Pseudo Tropimon invalide." });
-  const mon = BY_NUM.get(Number(body.n));
+  const mon = BY_ID.get(str(body.id, 30) || String(Math.floor(Number(body.n))));
   if (!mon) return res.status(400).json({ error: "Pokémon inconnu." });
   const iv = Array.isArray(body.iv) && body.iv.length === 6 ? body.iv.map((v) => Math.floor(Number(v))) : null;
   if (!iv || iv.some((v) => !(v >= 0 && v <= 31))) return res.status(400).json({ error: "IV invalides (entre 0 et 31)." });
@@ -80,7 +80,7 @@ module.exports = async (req, res) => {
   const price = Math.floor(Number(body.price));
   if (!(price >= 1 && price <= 100000000)) return res.status(400).json({ error: "Indique le prix que tu es prêt à mettre." });
   const notes = clean(str(body.notes, 500));
-  const dif = difficulty(mon.n, iv, isTc);
+  const dif = difficulty(mon.id, iv, isTc);
 
   const avatar = user.avatar
     ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`
@@ -99,7 +99,7 @@ module.exports = async (req, res) => {
 
   const id = crypto.randomBytes(4).toString("hex");
   try {
-    await redis(["HSET", "wanted", id, JSON.stringify({ id, at: Date.now(), uid: user.id, name: user.username, mc, n: mon.n, pokemon: mon.fr,
+    await redis(["HSET", "wanted", id, JSON.stringify({ id, at: Date.now(), uid: user.id, name: user.username, mc, n: mon.n, pid: mon.id, pokemon: mon.fr,
       iv, talent, tc: isTc, price, difficulty: dif, rarity: rLabel(mon.r), notes, status: "open" })]);
   } catch (e) { console.error("wanted store", e); }
   try {
