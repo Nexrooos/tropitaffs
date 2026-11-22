@@ -628,7 +628,8 @@ function pkRenderForm(msg){
     if(b.dataset.ivall!==undefined)$("pkF").querySelectorAll("input[data-iv]").forEach(x=>x.value=b.dataset.ivall);
     else{const x=$("pkF").querySelector(`input[data-iv="${b.dataset.iv31}"]`);x.value=(parseInt(x.value,10)||0)===31?0:31}
     paintIv();syncDiff();sfx("click")});syncAb();syncDiff();
-  $("pkCancel").onclick=()=>{pkSel=null;pkRenderForm();pkRenderList();sfx("click")};
+  $("pkCancel").onclick=()=>{const was=pkSel;pkSel=null;pkRenderForm();pkRenderList();sfx("click");
+    const row=$("pkList").querySelector(`button[data-fam="${was}"]`);(row?row.closest(".fam"):$("pokemon")).scrollIntoView({block:"center"})};
   if(!user)$("pkLogin").onclick=login;
   $("pkF").addEventListener("submit",async e=>{
     e.preventDefault();
