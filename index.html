@@ -604,10 +604,11 @@ function pkRenderForm(msg){
 
     <div class="diff" id="pkDiff"></div>
     <div class="row2">
-      <label>Prix que tu es prêt à mettre ($) *<input id="pkPrice" inputmode="numeric" maxlength="10" placeholder="Ex. 5000"></label>
+      <label>Prix que tu es prêt à mettre ($) *<input id="pkPrice" inputmode="numeric" maxlength="10" placeholder="Ex. 5000"><span class="hint" id="pkBest"></span></label>
       <label>Pseudo Tropimon *<input id="pkMc" maxlength="16" value="${esc($("mc").value||"")}" placeholder="Ex. Steve_42"></label>
     </div>
     <label>Précisions <span class="hint">Optionnel : nature, shiny, autre chose à savoir…</span><textarea id="pkNotes" maxlength="500"></textarea></label>
+    <p class="hint" style="margin:0">Ta demande apparaîtra dans le classement public avec ton pseudo Tropimon, le Pokémon, les IV et ton prix (pas ton Discord).</p>
     <div class="msg ${msg?"show "+msg[0]:""}" role="status">${msg?esc(msg[1]):""}</div>
     <div class="row" style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn red" type="submit">Envoyer ma demande</button><button class="btn" type="button" id="pkCancel">Annuler</button></div>
   </form>`;
@@ -617,7 +618,8 @@ function pkRenderForm(msg){
     $("pkAbHint").textContent=(m.ab.length>1?`${m.ab.join(" et ")} s'échangent avec une Capsule Talent. `:"")+(m.tc?`Le talent caché (${m.tc}) ne s'obtient pas comme ça, il augmente pas mal la difficulté.`:"");};
   const getIv=()=>[...$("pkF").querySelectorAll("input[data-iv]")].map(x=>Math.max(0,Math.min(31,parseInt(x.value,10)||0)));
   const paintIv=()=>$("pkF").querySelectorAll("input[data-iv]").forEach(x=>{const b=$("pkF").querySelector(`[data-iv31="${x.dataset.iv}"]`);b.classList.toggle("on",(parseInt(x.value,10)||0)===31)});
-  const syncDiff=()=>{const id=$("pkMon").value,m=fam.find(x=>x.id===id),tc=!!m.tc&&$("pkAb").value===m.tc,d=pkDifficulty(fam,id,getIv(),tc);
+  const syncBest=()=>{const id=$("pkMon").value,b=wBest(id),m=fam.find(x=>x.id===id);$("pkBest").innerHTML=b?`Meilleure offre actuelle pour ${esc(m.fr)} : <b style="color:var(--red)">${fmt(b.price)}</b> (${esc(ivShort(b.iv))}${b.tc?", TC":""}). Propose plus pour passer devant !`:`Aucune offre pour ${esc(m.fr)} pour l'instant.`};
+  const syncDiff=()=>{syncBest();const id=$("pkMon").value,m=fam.find(x=>x.id===id),tc=!!m.tc&&$("pkAb").value===m.tc,d=pkDifficulty(fam,id,getIv(),tc);
     $("pkDiff").innerHTML=`<div>Rareté de ${esc(m.fr)} : ${rBadge(m.r)}</div><div>Difficulté estimée : <b style="color:${d.color}">${d.label}</b></div><div class="bar"><i style="width:${d.pct}%;background:${d.color}"></i></div>
       <span class="hint">Calculée avec la rareté (la forme la plus facile à trouver de la famille jusqu'à ce Pokémon), les IV demandés${tc?" et le talent caché (TC), qui augmente pas mal la difficulté":""}.</span>`;};
   $("pkMon").onchange=()=>{syncAb();syncDiff()};$("pkAb").onchange=syncDiff;
@@ -651,23 +653,26 @@ $("pkList").addEventListener("click",e=>{const b=e.target.closest("button[data-f
 let WREQ=null,wShowDone=false;
 const ivShort=iv=>iv.every(v=>v===0)?"IV : peu importe":"IV : "+["PV","Atq","Déf","AtqS","DéfS","Vit"].map((s,i)=>iv[i]===31?s+" 31":iv[i]>0?s+"≥"+iv[i]:"").filter(Boolean).join(", ");
 async function wCall(payload){const r=await fetch("/api/wanted",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:user&&user.token,...payload})});const d=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(d.error||"Erreur"),{status:r.status});return d}
+let WADMIN=false;
 function wRender(){
   const open=WREQ.filter(w=>w.status!=="done"),done=WREQ.length-open.length,list=wShowDone?WREQ:open,max=Math.max(1,...list.map(w=>w.price));
-  $("pkAdmin").innerHTML=`<div class="wadm"><h3>Équipe : demandes par prix proposé</h3>
-    <p class="sum">${open.length} demande${open.length>1?"s":""} en cours${open.length?` · offre la plus haute <b style="white-space:nowrap">${fmt(open[0].price)}</b> (${esc(open[0].mc)}, ${esc(open[0].pokemon)})`:""}. Visible seulement par l'équipe. ${done?`<button type="button" class="linkbtn" id="wToggle">${done>1?`${wShowDone?"Masquer":"Voir"} les ${done} traitées`:`${wShowDone?"Masquer":"Voir"} la demande traitée`}</button>`:""}</p>
-    ${list.length?list.map((w,i)=>`<div class="wrow${w.status==="done"?" done":""}" title="${esc(`${w.pokemon} · ${ivShort(w.iv)} · Talent : ${w.talent} · Rareté : ${w.rarity} · ${new Date(w.at).toLocaleString("fr-FR")}${w.notes?" · "+w.notes:""}`)}">
+  $("pkAdmin").innerHTML=`<div class="wadm"><h3>Classement des demandes par prix proposé</h3>
+    <p class="sum">${open.length} demande${open.length>1?"s":""} en cours${open.length?` · offre la plus haute <b style="white-space:nowrap">${fmt(open[0].price)}</b> (${esc(open[0].mc)}, ${esc(open[0].pokemon)})`:""}. ${WADMIN?"Vue équipe : Discord et précisions visibles, bouton « Traité » pour retirer une demande.":"On s'occupe en priorité des plus grosses offres : tu veux le même Pokémon ? Propose plus !"} ${WADMIN&&done?`<button type="button" class="linkbtn" id="wToggle">${done>1?`${wShowDone?"Masquer":"Voir"} les ${done} traitées`:`${wShowDone?"Masquer":"Voir"} la demande traitée`}</button>`:""}</p>
+    ${list.length?list.map((w,i)=>`<div class="wrow${w.status==="done"?" done":""}${WADMIN?"":" pub"}" title="${esc(WADMIN?`${w.pokemon} · ${ivShort(w.iv)} · Talent : ${w.talent} · Rareté : ${w.rarity} · ${new Date(w.at).toLocaleString("fr-FR")}${w.notes?" · "+w.notes:""}`:`${w.pokemon} · ${ivShort(w.iv)}${w.tc?" · talent caché":""} · demandé le ${new Date(w.at).toLocaleDateString("fr-FR")}`)}">
       <span class="wrank">${i+1}</span>
-      <div class="wwho"><b>${esc(w.mc)} <span style="display:inline">@${esc(w.name)}</span></b><span>${esc(w.pokemon)} · ${esc(ivShort(w.iv))}${w.tc?" · TC":""}</span></div>
+      <div class="wwho"><b>${esc(w.mc)}${WADMIN?` <span style="display:inline">@${esc(w.name)}</span>`:""}</b><span>${esc(w.pokemon)} · ${esc(ivShort(w.iv))}${w.tc?" · TC":""}</span></div>
       <div class="wbar"><div class="wtrack"><i style="width:${Math.round(w.price/max*100)}%"></i></div><strong>${fmt(w.price)}</strong></div>
-      <div class="wact"><span class="dtag">${esc(w.difficulty)}</span><button type="button" data-w="${w.id}" data-wa="${w.status==="done"?"reopen":"done"}">${w.status==="done"?"Rouvrir":"Traité ✓"}</button></div>
-    </div>`).join(""):`<p class="note" style="margin:0">Aucune demande pour l'instant.</p>`}</div>`;
+      <div class="wact"><span class="dtag">${esc(w.difficulty)}</span>${WADMIN?`<button type="button" data-w="${w.id}" data-wa="${w.status==="done"?"reopen":"done"}">${w.status==="done"?"Rouvrir":"Traité ✓"}</button>`:""}</div>
+    </div>`).join(""):`<p class="note" style="margin:0">Aucune demande pour l'instant. Sois le premier !</p>`}</div>`;
   const t=$("wToggle");if(t)t.onclick=()=>{wShowDone=!wShowDone;wRender()};
   $("pkAdmin").querySelectorAll("button[data-w]").forEach(b=>b.onclick=async()=>{try{WREQ=(await wCall({action:b.dataset.wa,id:b.dataset.w})).requests;sfx("add");wRender()}catch(e){sfx("err")}});
 }
 async function wLoad(){
-  if(!user){$("pkAdmin").innerHTML="";return}
-  try{WREQ=(await wCall({action:"list"})).requests;wRender()}catch(e){$("pkAdmin").innerHTML=""}
+  if(user){try{WREQ=(await wCall({action:"list"})).requests;WADMIN=true;wRender();return}catch(e){}}
+  WADMIN=false;
+  try{WREQ=(await wCall({action:"public"})).requests;wRender()}catch(e){$("pkAdmin").innerHTML=""}
 }
+function wBest(pid){const o=(WREQ||[]).filter(w=>w.status!=="done"&&(w.pid||String(w.n))===pid);return o.length?o.reduce((a,b)=>b.price>a.price?b:a):null}
 $("pkLegend").innerHTML=`<b>Rareté dans la nature :</b> ${["common","uncommon","rare","ultra-rare","none"].map(rBadge).join(" ")} <span class="note">« Snack » = n'apparaît qu'avec un Poké Snack. « Pas d'apparition » = ne spawn pas dans la nature : à obtenir par évolution, œuf ou fossile.</span>`;
 fetch("data/pokemon.json").then(r=>r.json()).then(d=>{PK=d;pkRenderList()}).catch(()=>{$("pkList").innerHTML=`<p class="note">Impossible de charger la liste des Pokémon.</p>`});
 

@@ -34,6 +34,20 @@ module.exports = async (req, res) => {
   if (typeof body === "string") { try { body = JSON.parse(body); } catch { body = {}; } }
   body = body || {};
 
+  // Classement public : demandes en cours, sans Discord ni précisions
+  if (str(body.action, 10) === "public") {
+    try {
+      const raw = (await redis(["HGETALL", "wanted"])) || [];
+      const pub = [];
+      for (let i = 0; i < raw.length; i += 2) {
+        const w = JSON.parse(raw[i + 1]);
+        if (w.status !== "done") pub.push({ id: w.id, at: w.at, mc: w.mc, pid: w.pid || String(w.n), pokemon: w.pokemon, iv: w.iv, tc: w.tc, price: w.price, difficulty: w.difficulty });
+      }
+      pub.sort((a, b) => b.price - a.price || a.at - b.at);
+      return res.status(200).json({ requests: pub, public: true });
+    } catch (e) { return res.status(503).json({ error: "Classement indisponible." }); }
+  }
+
   const token = str(body.token, 200);
   if (!token) return res.status(401).json({ error: "Connecte-toi avec Discord." });
   let user;
