@@ -62,6 +62,8 @@ h2{font-size:clamp(14px,1.8vw,20px);margin:0 0 8px}
 .tabs button{min-height:44px;padding:8px 16px;border-radius:999px;border:3px solid var(--line);background:var(--card);color:var(--ink);font:700 15px Nunito;cursor:pointer}
 .tabs button[aria-pressed=true]{background:var(--sea);border-color:var(--sea);color:#fff}
 .alt{background:var(--sand)}
+.info{grid-column:1/-1;margin:0;padding:14px 16px;border-radius:12px;border:3px solid var(--sea);background:color-mix(in srgb,var(--sea) 12%,var(--card));max-width:80ch}
+.linkbtn{background:none;border:0;padding:0;font:inherit;font-weight:900;color:var(--red);text-decoration:underline;cursor:pointer}
 .custom{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:24px;background:var(--card);border:3px solid #1b1f2a;border-radius:14px;padding:22px;box-shadow:0 6px 0 #1b1f2a}
 .custom h3{margin:0 0 6px;font-size:20px}.custom .side p{margin:0 0 12px;color:var(--mute)}
 .custom .steps{display:grid;gap:10px;margin:16px 0 0;padding:0;list-style:none}
@@ -343,7 +345,11 @@ function renderCustom(){
 }
 function renderCatalog(){
   if(cat==="custom")return renderCustom();
-  $("catalog").innerHTML=ITEMS.filter(i=>i.cat===cat).map(i=>`
+  const INFO={
+    plat:`<b>Sans matériaux :</b> c'est toi qui fournis les matériaux, on s'occupe uniquement de construire le plat.`,
+    platmat:`<b>Avec matériaux :</b> on fournit nous-mêmes les matériaux de base et on construit tout. Pour une plateforme avec des dalles ou des blocs spécifiques, passe par la <button type="button" class="linkbtn" data-goto="custom">commande personnalisée</button>.`
+  };
+  $("catalog").innerHTML=(INFO[cat]?`<p class="info">${INFO[cat]}</p>`:"")+ITEMS.filter(i=>i.cat===cat).map(i=>`
     <div class="card"><h3>${i.name}</h3>${i.unit?`<small>${i.unit}</small>`:""}<div class="price">${fmt(i.price)}</div>
     <div class="qty"><button type="button" data-d="-1" data-id="${i.id}" aria-label="Retirer ${i.name}">−</button>
     <output>${cart[i.id]||0}</output><button type="button" data-d="1" data-id="${i.id}" aria-label="Ajouter ${i.name}">+</button></div></div>`).join("");
@@ -354,6 +360,8 @@ function renderRecap(){
   $("total").textContent=fmt(lines.reduce((s,i)=>s+cart[i.id]*i.price,0));
 }
 $("catalog").addEventListener("click",e=>{
+  const go=e.target.closest("button[data-goto]");
+  if(go){document.querySelector(`.tabs button[data-cat="${go.dataset.goto}"]`).click();return}
   const rm=e.target.closest("button[data-rm]");
   if(rm){customs.splice(Number(rm.dataset.rm),1);store.set("tt_custom",customs);renderCustom();renderRecap();return}
   const b=e.target.closest("button[data-id]");if(!b)return;
