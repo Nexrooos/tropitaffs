@@ -79,7 +79,8 @@ h2{font-size:clamp(14px,1.8vw,20px);margin:0 0 8px}
 .wact{display:flex;gap:6px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
 .wprice{width:80px;min-height:38px;padding:4px 8px;font-size:14px}
 .mrow{grid-template-columns:minmax(0,1.6fr) auto minmax(0,1.4fr)}.srow{grid-template-columns:44px minmax(0,1.2fr) minmax(0,1.8fr)}
-.me{position:relative}.notif{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#e3352f;color:#fff;font-size:12px;font-weight:900;display:grid;place-items:center;border:2px solid #fff}.wact button{min-height:38px;padding:4px 10px;border-radius:8px;border:2px solid #1b1f2a;background:var(--bg);color:var(--ink);font:900 13px Nunito,sans-serif;cursor:pointer}
+.me{position:relative}.navmine{position:relative}.navmine[data-n]:not([data-n=""])::after{content:attr(data-n);position:absolute;top:-8px;right:-14px;min-width:18px;height:18px;padding:0 4px;border-radius:999px;background:#fff;color:#e3352f;font-size:11px;font-weight:900;display:grid;place-items:center}
+#pkMine{scroll-margin-top:90px}.notif{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#e3352f;color:#fff;font-size:12px;font-weight:900;display:grid;place-items:center;border:2px solid #fff}.wact button{min-height:38px;padding:4px 10px;border-radius:8px;border:2px solid #1b1f2a;background:var(--bg);color:var(--ink);font:900 13px Nunito,sans-serif;cursor:pointer}
 .dtag{font-size:12px;font-weight:900;padding:2px 8px;border-radius:999px;border:2px solid var(--line);white-space:nowrap}
 @media(max-width:760px){.wrow,.srow{grid-template-columns:28px minmax(0,1fr)}.wbar,.wact{grid-column:2}.wact{justify-content:flex-start}.mrow{grid-template-columns:minmax(0,1fr) auto}.mrow .wact{grid-column:1/-1}}
 .legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin:0 0 14px;font-size:14px;align-items:center}
@@ -182,7 +183,7 @@ footer a{color:#ffcf7a}
 <body>
 <header><div class="wrap">
   <a class="logo" href="#top"><img src="logo-sm.png" alt="TropiTaffs" width="96" height="56"></a>
-  <nav><a href="#services">Services</a><a href="#commande">Commander</a><a href="#pokemon">Pokémon</a><a href="#loterie">Loterie</a><a href="#infos">Infos</a><a href="#contact">Contact</a><span id="me"></span><button type="button" id="snd" class="snd" aria-pressed="true" aria-label="Couper le son">🔊</button></nav>
+  <nav><a href="#services">Services</a><a href="#commande">Commander</a><a href="#pokemon">Pokémon</a><a href="#pkMine" id="navMine" class="navmine" hidden>Mes demandes</a><a href="#loterie">Loterie</a><a href="#infos">Infos</a><a href="#contact">Contact</a><span id="me"></span><button type="button" id="snd" class="snd" aria-pressed="true" aria-label="Couper le son">🔊</button></nav>
 </div></header>
 
 <section class="hero" id="top">
@@ -693,7 +694,9 @@ function alertMsg(t){const p=document.createElement("p");p.className="msg show e
 
 function seenAt(){try{return Number(localStorage.getItem("tt_seen")||0)}catch{return 0}}
 function wRenderMine(){
-  const box=$("pkMine");if(!MINE||!MINE.length){box.innerHTML="";updateBadge(0);return}
+  const box=$("pkMine");$("navMine").hidden=!user;
+  if(!user){box.innerHTML="";updateBadge(0);return}
+  if(!MINE||!MINE.length){box.innerHTML=`<div class="wadm mybox"><h3>Mes demandes</h3><p class="note" style="margin:0">Tu n'as pas encore de demande. Cherche un Pokémon ci-dessous et clique sur « Faire une demande ».</p></div>`;updateBadge(0);return}
   const fresh=MINE.filter(w=>(w.status==="hunting"||w.status==="sold")&&w.updated>seenAt());
   updateBadge(fresh.length);
   box.innerHTML=`<div class="wadm mybox"><h3>Mes demandes</h3>
@@ -708,7 +711,7 @@ function wRenderMine(){
     if(b.dataset.confirm!=="1"){b.dataset.confirm="1";b.textContent="Confirmer l'annulation ?";b.style.background="#f8c8c4";return}
     b.disabled=true;try{MINE=(await wCall({action:"cancel",id:b.dataset.mc})).mine;sfx("down");wRenderMine()}catch(e){sfx("err");b.disabled=false;b.textContent=e.message}});
 }
-function updateBadge(n){const a=document.querySelector("#me .me");if(!a)return;let d=a.querySelector(".notif");if(n&&!d){d=document.createElement("span");d.className="notif";a.appendChild(d)}if(d){if(n){d.textContent=n;a.href="#pokemon";a.title="Du nouveau sur tes demandes de Pokémon"}else d.remove()}}
+function updateBadge(n){const nm=$("navMine");nm.dataset.n=n||"";const a=document.querySelector("#me .me");if(!a)return;let d=a.querySelector(".notif");if(n&&!d){d=document.createElement("span");d.className="notif";a.appendChild(d)}if(d){if(n){d.textContent=n;a.href="#pkMine";a.title="Du nouveau sur tes demandes de Pokémon"}else d.remove()}}
 
 function wRenderSales(){
   const box=$("pkSales");if(!SALES||!SALES.length){box.innerHTML="";return}
