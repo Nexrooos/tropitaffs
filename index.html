@@ -291,8 +291,8 @@ function renderCustom(){
   const isIron=()=>document.querySelector('input[name=kind]:checked').value==="Ferme à fer";
   const syncKind=()=>{const on=isIron();$("ironBox").hidden=!on;$("ironBox").style.display=on?"grid":"none";
     $("descLab").firstChild.textContent=on?"Précisions ":"Ta demande * ";
-    $("descLab").querySelector("span").textContent=on?"Optionnel : emplacement, délai…":"Ressources, blocs, quantités… plus c'est précis, plus le devis est juste";
-    $("cdesc").placeholder=on?"Ex. à côté de mon plat principal":"Ex. 20 shulkers de terracotta orange, 10 shulkers de quartz";$("cqty").closest("label").style.display=on?"none":""};
+    $("descLab").querySelector("span").textContent=on?"Indique le serveur, le délai souhaité et les coordonnées de l'emplacement":"Ressources, blocs, quantités… plus c'est précis, plus le devis est juste";
+    $("cdesc").placeholder=on?"Ex. Serveur Tropi 2, d'ici une semaine, x 1200 / z -340":"Ex. 20 shulkers de terracotta orange, 10 shulkers de quartz";$("cqty").closest("label").style.display=on?"none":""};
   $("cform").addEventListener("change",e=>{if(e.target.name==="kind")syncKind()});syncKind();
   $("cform").addEventListener("submit",e=>{
     e.preventDefault();const d=$("cdesc").value.trim();
