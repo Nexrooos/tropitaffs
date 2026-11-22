@@ -133,7 +133,9 @@ module.exports = async (req, res) => {
     body = body || {};
     const token = req.method === "POST" ? str(body.token, 200) : "";
     const user = token ? await discordUser(token) : null;
-    const admins = (process.env.ADMIN_IDS || "").split(",").map((s) => s.trim()).filter(Boolean);
+    // Équipe autorisée à valider les paiements (identifiants Discord). ADMIN_IDS peut en ajouter.
+    const admins = ["390924523765104642" /* Nexro */, "1403737838536757301" /* Akumaa1702 */,
+      ...(process.env.ADMIN_IDS || "").split(",").map((s) => s.trim()).filter(Boolean)];
     const isAdmin = !!user && admins.includes(user.id);
 
     let round = await ensureRound();
