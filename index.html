@@ -233,7 +233,7 @@ const $=id=>document.getElementById(id);
 const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch{return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}},del(k){try{localStorage.removeItem(k)}catch{}}};
 
 let cart=store.get("tt_cart")||{}, cat="farm", user=null, customs=store.get("tt_custom")||[];
-const KINDS=["Farm d'une autre ressource","Construction / build","Redstone / farm automatique","Autre"];
+const KINDS=["Farm d'une autre ressource","Plateforme personnalisée","Ferme à fer","Autre"];
 
 function renderCustom(){
   $("catalog").innerHTML=`<div class="custom">
