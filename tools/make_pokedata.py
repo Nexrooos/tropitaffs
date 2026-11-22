@@ -1,7 +1,7 @@
 # Construit data/pokemon.json : familles d'évolution des Pokémon implémentés dans Cobblemon 1.8.4,
 # sans légendaires ni fabuleux, avec noms et talents en français (PokéAPI).
 import json, glob, csv, re, sys, collections
-SPEC = sys.argv[1]; P = sys.argv[2]; OUT = sys.argv[3]
+SPEC = sys.argv[1]; P = sys.argv[2]; OUT = sys.argv[3]; SPAWN = sys.argv[4]
 norm = lambda s: re.sub(r'[^a-z0-9]', '', s.lower())
 
 fr_species = {int(r['pokemon_species_id']): r['name'] for r in csv.DictReader(open(P + 'pokemon_species_names.csv', encoding='utf-8')) if r['local_language_id'] == '5'}
@@ -44,6 +44,23 @@ for child, par in {'shedinja': 'nincada'}.items():
 def depth(k, seen=()):
     return 0 if k not in pre or k in seen else 1 + depth(pre[k], seen + (k,))
 
+# Rareté d'apparition dans la nature (meilleure rareté parmi les apparitions normales, forme de base)
+ORDER = ['common', 'uncommon', 'rare', 'ultra-rare']
+best, snack_only = {}, {}
+for f in glob.glob(SPAWN + '/*.json'):
+    d = json.load(open(f, encoding='utf-8'))
+    if d.get('enabled') is False: continue
+    for sp in d.get('spawns', []):
+        parts = str(sp.get('pokemon', '')).split()
+        if not parts or len(parts) > 1 or sp.get('bucket') not in ORDER: continue
+        k = norm(parts[0])
+        target = snack_only if (sp.get('condition') or {}).get('isPokeSnack') else best
+        if k not in target or ORDER.index(sp['bucket']) < ORDER.index(target[k]): target[k] = sp['bucket']
+def rarity(k):
+    if k in best: return best[k]
+    if k in snack_only: return snack_only[k] + '*'
+    return 'none'
+
 fams = collections.defaultdict(list)
 for k in species: fams[find(k)].append(k)
 out = []
@@ -55,7 +72,7 @@ for root, members in fams.items():
         normal = [ab_fr(a) for a in d.get('abilities', []) if not a.startswith('h:')]
         hidden = [ab_fr(a[2:]) for a in d.get('abilities', []) if a.startswith('h:')]
         normal = list(dict.fromkeys(normal))
-        mons.append({'n': n, 'fr': fr_species.get(n, d['name']), 'en': d['name'], 'ab': normal, 'tc': hidden[0] if hidden else None})
+        mons.append({'n': n, 'fr': fr_species.get(n, d['name']), 'en': d['name'], 'ab': normal, 'tc': hidden[0] if hidden else None, 'r': rarity(k)})
     out.append(mons)
 out.sort(key=lambda fam: min(m['n'] for m in fam))
 json.dump(out, open(OUT, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))

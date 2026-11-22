@@ -68,6 +68,12 @@ h2{font-size:clamp(14px,1.8vw,20px);margin:0 0 8px}
 .alt{background:var(--sand)}
 .pkbar{display:flex;flex-wrap:wrap;align-items:end;gap:10px 16px;margin-bottom:14px}.pksearch{flex:1 1 320px;max-width:520px}
 .pklist{display:grid;gap:8px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin:0 0 14px;font-size:14px;align-items:center}
+.rb{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:900;color:#fff;white-space:nowrap;vertical-align:middle}
+.rb.common{background:#2f9e55}.rb.uncommon{background:#3b6fd8}.rb.rare{background:#8e44c9}.rb.ultra-rare{background:#d9730d}.rb.none{background:#7a7f8c}
+.diff{display:grid;gap:6px;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--bg)}
+.diff .bar{height:12px;border-radius:999px;background:var(--line);overflow:hidden}.diff .bar i{display:block;height:100%;border-radius:999px}
+.diff b{font-size:17px}
 .fam{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--card);border:2px solid var(--line);border-radius:12px}
 .fam .chain{flex:1;display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-weight:700}
 .fam .chain i{color:var(--mute);font-style:normal}.fam .num{color:var(--mute);font-size:13px;font-weight:400}
@@ -288,6 +294,7 @@ S.innerHTML=`<g transform="scale(4)">${o}</g><text x="896" y="414" text-anchor="
   <p class="lead">Tu cherches un Pokémon précis ? Trouve sa famille, choisis les IV, le talent et le prix que tu es prêt à mettre.</p>
   <p class="info" style="margin:0 0 18px"><b>On ne promet rien :</b> on prend juste note de ta demande et on te recontacte sur Discord si jamais on a le Pokémon. Plus tes exigences sont élevées (IV, talent), plus ça peut être long à trouver.</p>
   <div class="pkbar"><label class="pksearch">Rechercher un Pokémon<input id="pkQ" type="search" placeholder="Ex. Salamèche, Évoli, Lucario…" autocomplete="off"></label><span class="note" id="pkCount"></span></div>
+  <div class="legend" id="pkLegend"></div>
   <div id="pkForm"></div>
   <div class="pklist" id="pkList"><p class="note">Chargement de la liste…</p></div>
   <div style="text-align:center;margin-top:14px"><button type="button" class="btn" id="pkMore" hidden>Afficher plus de familles</button></div>
@@ -544,13 +551,22 @@ $("team").addEventListener("click",async e=>{
 });
 
 /* ===== Recherche de Pokémon ===== */
+const RAR={common:["Commun","common"],uncommon:["Peu commun","uncommon"],rare:["Rare","rare"],"ultra-rare":["Ultra-rare","ultra-rare"],none:["Pas d'apparition","none"]};
+const rKey=r=>r.replace("*","");
+const rBadge=r=>{const[l,c]=RAR[rKey(r)]||RAR.none;return `<span class="rb ${c}" title="${r.endsWith("*")?"Apparaît seulement avec un Poké Snack":""}">${l}${r.endsWith("*")?" · Snack":""}</span>`};
+const RPTS={common:0,uncommon:1,rare:2,"ultra-rare":3,none:2},IVPTS={any:0,good:1,"3":2,"4":3,"5":4,"6":5};
+const DIFF=[[1,"Facile","#2f9e55"],[3,"Moyen","#3b6fd8"],[5,"Difficile","#8e44c9"],[7,"Très difficile","#d9730d"],[99,"Extrême","#e3352f"]];
+function pkDifficulty(fam,n,iv,tc){
+  const i=fam.findIndex(m=>m.n===n);const easiest=Math.min(...fam.slice(0,i+1).map(m=>RPTS[rKey(m.r)]));
+  const pts=easiest+IVPTS[iv]+(tc?2:0);const d=DIFF.find(x=>pts<=x[0]);return{pts,label:d[1],color:d[2],pct:Math.min(100,Math.round((pts+1)/11*100))};
+}
 const IVS=[["any","Peu importe","le plus rapide"],["good","Bons IV (toutes les stats ≥ 20)","assez rapide"],["3","3 IV parfaits (31)","long"],["4","4 IV parfaits (31)","très long"],["5","5 IV parfaits (31)","très très long"],["6","6 IV parfaits (31)","extrêmement long"]];
 let PK=null,pkShown=40,pkSel=null;
 const fold=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 function pkFiltered(){const q=fold($("pkQ").value.trim());return q?PK.filter(f=>f.some(m=>fold(m.fr).includes(q)||fold(m.en).includes(q)||String(m.n)===q)):PK}
 function pkRenderList(){
   const L=pkFiltered();$("pkCount").textContent=`${L.length} famille${L.length>1?"s":""}`;
-  $("pkList").innerHTML=L.slice(0,pkShown).map(f=>{const i=PK.indexOf(f);return `<div class="fam${pkSel===i?" on":""}"><div class="chain">${f.map(m=>`<span>${esc(m.fr)} <span class="num">#${m.n}</span></span>`).join("<i>›</i>")}</div><button type="button" data-fam="${i}">Faire une demande</button></div>`}).join("")||`<p class="note">Aucun Pokémon trouvé. Il n'est peut-être pas encore dans Cobblemon, ou c'est un légendaire.</p>`;
+  $("pkList").innerHTML=L.slice(0,pkShown).map(f=>{const i=PK.indexOf(f);return `<div class="fam${pkSel===i?" on":""}"><div class="chain">${f.map(m=>`<span>${esc(m.fr)} <span class="num">#${m.n}</span> ${rBadge(m.r)}</span>`).join("<i>›</i>")}</div><button type="button" data-fam="${i}">Faire une demande</button></div>`}).join("")||`<p class="note">Aucun Pokémon trouvé. Il n'est peut-être pas encore dans Cobblemon, ou c'est un légendaire.</p>`;
   $("pkMore").hidden=L.length<=pkShown;
 }
 function pkRenderForm(msg){
@@ -565,6 +581,7 @@ function pkRenderForm(msg){
       <label>Talent souhaité<select id="pkAb"></select><span class="hint" id="pkAbHint"></span></label>
     </div>
     <label class="chk" id="pkPatchL"><input type="checkbox" id="pkPatch"> J'ai un Patch Talent (pour avoir le talent caché, TC)</label>
+    <div class="diff" id="pkDiff"></div>
     <div class="row2">
       <label>Prix que tu es prêt à mettre ($) *<input id="pkPrice" inputmode="numeric" maxlength="10" placeholder="Ex. 5000"></label>
       <label>Pseudo Tropimon *<input id="pkMc" maxlength="16" value="${esc($("mc").value||"")}" placeholder="Ex. Steve_42"></label>
@@ -575,8 +592,11 @@ function pkRenderForm(msg){
   </form>`;
   const syncAb=()=>{const m=fam.find(x=>x.n==$("pkMon").value),patch=$("pkPatch").checked;
     $("pkAb").innerHTML=`<option value="any">Peu importe</option>`+m.ab.map(a=>`<option>${esc(a)}</option>`).join("")+(m.tc?`<option value="${esc(m.tc)}" ${patch?"":"disabled"}>TC : ${esc(m.tc)}${patch?"":" (Patch Talent requis)"}</option>`:"");
-    $("pkAbHint").textContent=m.tc?`Talent caché (TC) : ${m.tc}, seulement avec un Patch Talent.`:"";};
-  $("pkMon").onchange=syncAb;$("pkPatch").onchange=syncAb;syncAb();
+    $("pkAbHint").textContent=m.tc?`Talent caché (TC) : ${m.tc}, seulement avec un Patch Talent. Il augmente pas mal la difficulté.`:"";};
+  const syncDiff=()=>{const n=Number($("pkMon").value),m=fam.find(x=>x.n===n),tc=!!m.tc&&$("pkAb").value===m.tc,d=pkDifficulty(fam,n,$("pkIv").value,tc);
+    $("pkDiff").innerHTML=`<div>Rareté de ${esc(m.fr)} : ${rBadge(m.r)}</div><div>Difficulté estimée : <b style="color:${d.color}">${d.label}</b></div><div class="bar"><i style="width:${d.pct}%;background:${d.color}"></i></div>
+      <span class="hint">Calculée avec la rareté (la forme la plus facile à trouver de la famille jusqu'à ce Pokémon), les IV demandés${tc?" et le talent caché (TC), qui augmente pas mal la difficulté":""}.</span>`;};
+  $("pkMon").onchange=()=>{syncAb();syncDiff()};$("pkPatch").onchange=()=>{syncAb();syncDiff()};$("pkAb").onchange=syncDiff;$("pkIv").onchange=syncDiff;syncAb();syncDiff();
   $("pkCancel").onclick=()=>{pkSel=null;pkRenderForm();pkRenderList();sfx("click")};
   if(!user)$("pkLogin").onclick=login;
   $("pkF").addEventListener("submit",async e=>{
@@ -598,6 +618,7 @@ function pkRenderForm(msg){
 $("pkQ").addEventListener("input",()=>{pkShown=40;if(PK)pkRenderList()});
 $("pkMore").onclick=()=>{pkShown+=60;pkRenderList();sfx("click")};
 $("pkList").addEventListener("click",e=>{const b=e.target.closest("button[data-fam]");if(!b)return;pkSel=Number(b.dataset.fam);pkRenderForm();pkRenderList();sfx("click");$("pkForm").scrollIntoView({block:"start"})});
+$("pkLegend").innerHTML=`<b>Rareté dans la nature :</b> ${["common","uncommon","rare","ultra-rare","none"].map(rBadge).join(" ")} <span class="note">« Snack » = n'apparaît qu'avec un Poké Snack. « Pas d'apparition » = à obtenir par évolution ou reproduction.</span>`;
 fetch("data/pokemon.json").then(r=>r.json()).then(d=>{PK=d;pkRenderList()}).catch(()=>{$("pkList").innerHTML=`<p class="note">Impossible de charger la liste des Pokémon.</p>`});
 
 /* ===== Loterie ===== */
