@@ -6,7 +6,7 @@ const crypto = require("crypto");
 
 const BY_NUM = new Map(), FAM_OF = new Map();
 for (const fam of FAMILIES) for (const m of fam) { BY_NUM.set(m.n, m); FAM_OF.set(m.n, fam); }
-const RAR = { common: "Commun", uncommon: "Peu commun", rare: "Rare", "ultra-rare": "Ultra-rare", none: "Pas d'apparition (évolution / reproduction)" };
+const RAR = { common: "Commun", uncommon: "Peu commun", rare: "Rare", "ultra-rare": "Ultra-rare", none: "Pas d'apparition (évolution, œuf ou fossile)" };
 const RPTS = { common: 0, uncommon: 1, rare: 2, "ultra-rare": 3, none: 2 };
 const STATS = ["PV", "Attaque", "Défense", "Atq. Spé.", "Déf. Spé.", "Vitesse"];
 const ivPoints = (iv) => Math.min(5, [0, 1, 1, 2, 3, 4, 5][iv.filter((v) => v === 31).length] + (iv.some((v) => v >= 25 && v < 31) ? 1 : 0));

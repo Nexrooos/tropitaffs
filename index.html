@@ -668,7 +668,7 @@ async function wLoad(){
   if(!user){$("pkAdmin").innerHTML="";return}
   try{WREQ=(await wCall({action:"list"})).requests;wRender()}catch(e){$("pkAdmin").innerHTML=""}
 }
-$("pkLegend").innerHTML=`<b>Rareté dans la nature :</b> ${["common","uncommon","rare","ultra-rare","none"].map(rBadge).join(" ")} <span class="note">« Snack » = n'apparaît qu'avec un Poké Snack. « Pas d'apparition » = à obtenir par évolution ou reproduction.</span>`;
+$("pkLegend").innerHTML=`<b>Rareté dans la nature :</b> ${["common","uncommon","rare","ultra-rare","none"].map(rBadge).join(" ")} <span class="note">« Snack » = n'apparaît qu'avec un Poké Snack. « Pas d'apparition » = ne spawn pas dans la nature : à obtenir par évolution, œuf ou fossile.</span>`;
 fetch("data/pokemon.json").then(r=>r.json()).then(d=>{PK=d;pkRenderList()}).catch(()=>{$("pkList").innerHTML=`<p class="note">Impossible de charger la liste des Pokémon.</p>`});
 
 /* ===== Loterie ===== */

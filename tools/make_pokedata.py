@@ -46,13 +46,16 @@ def depth(k, seen=()):
 
 # Rareté d'apparition dans la nature (meilleure rareté parmi les apparitions normales, forme de base)
 ORDER = ['common', 'uncommon', 'rare', 'ultra-rare']
+REGIONAL = {'alolan', 'galarian', 'hisuian', 'paldean', 'valencian'}
 best, snack_only = {}, {}
 for f in glob.glob(SPAWN + '/*.json'):
     d = json.load(open(f, encoding='utf-8'))
     if d.get('enabled') is False: continue
     for sp in d.get('spawns', []):
         parts = str(sp.get('pokemon', '')).split()
-        if not parts or len(parts) > 1 or sp.get('bucket') not in ORDER: continue
+        # On ignore seulement les formes régionales ; les variantes simples (motif, sexe, couleur...) comptent
+        if not parts or sp.get('bucket') not in ORDER: continue
+        if any(t.split('=')[0] in REGIONAL for t in parts[1:]): continue
         k = norm(parts[0])
         target = snack_only if (sp.get('condition') or {}).get('isPokeSnack') else best
         if k not in target or ORDER.index(sp['bucket']) < ORDER.index(target[k]): target[k] = sp['bucket']
