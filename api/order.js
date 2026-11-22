@@ -10,6 +10,7 @@ const CATALOG = {
   trap: ["Shulker de trappes en bambou", 1400],
   planches: ["Shulker de planches de bambou", 600],
   stone: ["Shulker de stone", 500],
+  fer: ["Shulker de blocs de fer", 7000],
   bisball: ["Shulker de Bis Ball", 1000, 10],
 };
 for (const [n, [sans, avec]] of Object.entries(PLATS)) {
@@ -18,6 +19,7 @@ for (const [n, [sans, avec]] of Object.entries(PLATS)) {
 }
 // Personnes mentionnées (notifiées) à chaque nouvelle commande
 const NOTIFY = ["373545014594240512"]; // Nairfol
+const NOTIFY_FER = "430041267767083008"; // vendeur des blocs de fer, mentionné quand la commande en contient
 const KINDS = ["Farm d'une autre ressource", "Plateforme personnalisée", "Ferme à fer", "Autre"];
 
 const fmt = (n) => n.toLocaleString("fr-FR").replace(/ | /g, " ") + " $";
@@ -75,6 +77,7 @@ module.exports = async (req, res) => {
     .join("\n");
 
   // 3. Envoyer dans le salon
+  const notify = cart.fer > 0 ? [...NOTIFY, NOTIFY_FER] : NOTIFY;
   const avatar = user.avatar
     ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`
     : `https://cdn.discordapp.com/embed/avatars/${Number(BigInt(user.id) >> 22n) % 6}.png`;
@@ -94,8 +97,8 @@ module.exports = async (req, res) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         username: "TropiTaffs Commandes",
-        content: NOTIFY.map((id) => `<@${id}>`).join(" ") + " nouvelle commande !",
-        allowed_mentions: { parse: [], users: NOTIFY },
+        content: notify.map((id) => `<@${id}>`).join(" ") + " nouvelle commande !",
+        allowed_mentions: { parse: [], users: notify },
         embeds: [{ title: "🛒 Nouvelle commande", color: 0xe3352f, timestamp: new Date().toISOString(), thumbnail: { url: avatar }, fields }],
       }),
     });
