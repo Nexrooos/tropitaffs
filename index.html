@@ -246,7 +246,7 @@ document.addEventListener("click",e=>{
 const CONFIG = {
   DISCORD_CLIENT_ID: "1574071280351846651",            // ID de ton application sur discord.com/developers
   REDIRECT_URI: location.origin + location.pathname, // doit être ajoutée telle quelle dans OAuth2 > Redirects
-  WEBHOOK_URL: ""                   // Webhook du salon où arrivent les commandes
+  ORDER_API: "/api/order"           // Fonction serveur Vercel qui garde le webhook secret
 };
 
 const ITEMS = [
@@ -352,7 +352,7 @@ async function handleReturn(){
       if(!r.ok)throw 0;
       const d=await r.json();
       user={id:d.id,name:d.username,display:d.global_name||d.username,avatar:d.avatar?`https://cdn.discordapp.com/avatars/${d.id}/${d.avatar}.png?size=64`:`https://cdn.discordapp.com/embed/avatars/${Number(BigInt(d.id)>>22n)%6}.png`};
-      store.set("tt_user",user);
+      user.token=token;store.set("tt_user",user);
     }catch{showMsg("err","Impossible de récupérer ton profil Discord, réessaie.")}
   }else user=store.get("tt_user");
 }
@@ -386,25 +386,22 @@ $("form").addEventListener("submit",async e=>{
   const discord=user?`<@${user.id}> (@${user.name}) ✅ vérifié`:`${dcManual} (non vérifié)`;
   const text=`Nouvelle commande TropiTaffs\nDiscord : ${user?"@"+user.name:dcManual}\nTropimon : ${mc}\n${detail}${cdetail?"\nDemandes perso (sur devis) :\n"+cdetail:""}\nTotal estimé : ${fmt(total)}${customs.length?" + devis":""}${coords?"\nLivraison : "+coords:""}${notes?"\nPrécisions : "+notes:""}`;
 
-  if(!CONFIG.WEBHOOK_URL){
+  if(!user){
     showMsg("ok",`Commande prête. Copie ce message et envoie-le en MP à un membre de TropiTaffs sur Discord :<pre>${esc(text)}</pre><button type="button" class="btn" id="copy">Copier</button>`);
     $("copy").onclick=async()=>{try{await navigator.clipboard.writeText(text);$("copy").textContent="Copié !"}catch{$("copy").textContent="Sélectionne le texte pour copier"}};
     return;
   }
   $("send").disabled=true;$("send").textContent="Envoi…";
   try{
-    const r=await fetch(CONFIG.WEBHOOK_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
-      username:"TropiTaffs Commandes",allowed_mentions:{parse:[]},
-      embeds:[{title:"🛒 Nouvelle commande",color:0xe3352f,timestamp:new Date().toISOString(),
-        thumbnail:user?{url:user.avatar}:undefined,
-        fields:[{name:"Discord",value:discord,inline:true},{name:"Pseudo Tropimon",value:mc,inline:true},
-          {name:"Articles",value:detail.slice(0,1000)},...(cdetail?[{name:"Demandes personnalisées (sur devis)",value:cdetail.slice(0,1000)}]:[]),
-          {name:"Total estimé",value:fmt(total)+(customs.length?" + devis":""),inline:true},
-          ...(coords?[{name:"Livraison",value:coords.slice(0,200),inline:true}]:[]),
-          ...(notes?[{name:"Précisions",value:notes.slice(0,1000)}]:[])]}]})});
-    if(!r.ok)throw 0;
-    cart={};customs=[];store.set("tt_cart",cart);store.set("tt_custom",customs);renderCatalog();renderRecap();$("notes").value="";$("coords").value="";
-    showMsg("ok","Commande envoyée ! Un membre de TropiTaffs te contacte en MP sur Discord pour confirmer.");
+    const r=await fetch(CONFIG.ORDER_API,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({token:user.token,mc,coords,notes,cart,customs})});
+    const d=await r.json().catch(()=>({}));
+    if(r.status===401){user=null;store.del("tt_user");renderAuth();showMsg("err",esc(d.error||"Reconnecte-toi avec Discord."))}
+    else if(!r.ok)showMsg("err",esc(d.error||"L'envoi a échoué. Réessaie."));
+    else{
+      cart={};customs=[];store.set("tt_cart",cart);store.set("tt_custom",customs);renderCatalog();renderRecap();$("notes").value="";$("coords").value="";
+      showMsg("ok","Commande envoyée ! Un membre de TropiTaffs te contacte en MP sur Discord pour confirmer.");
+    }
   }catch{showMsg("err","L'envoi a échoué. Réessaie, ou envoie ta commande en MP à un membre de TropiTaffs.")}
   $("send").disabled=false;$("send").textContent="Envoyer la commande";
 });
