@@ -401,8 +401,10 @@ const ITEMS = [
 const BERRIES=["Baie Abriko", "Baie Alga", "Baie Babiri", "Baie Bouhlon", "Baie Ceriz", "Baie Charti", "Baie Chérim", "Baie Chocco", "Baie Cobaba", "Baie Durin", "Baie Eggant", "Baie Éka", "Baie Enigma", "Baie Figuy", "Baie Fraigo", "Baie Fraive", "Baie Framby", "Baie Frista", "Baie Gowav", "Baie Grena", "Baie Jaboca", "Baie Jouca", "Baie Kébia", "Baie Kika", "Baie Kiwan", "Baie Lampou", "Baie Lansat", "Baie Lichii", "Baie Lingan", "Baie Lonme", "Baie Mago", "Baie Mangou", "Baie Maron", "Baie Mepo", "Baie Micle", "Baie Myrte", "Baie Nanab", "Baie Nanana", "Baie Nanone", "Baie Oran", "Baie Palma", "Baie Panga", "Baie Papaya", "Baie Parma", "Baie Pêcha", "Baie Pitaye", "Baie Pocpoc", "Baie Pommo", "Baie Pomroz", "Baie Prine", "Baie Qualot", "Baie Rabuta", "Baie Rangma", "Baie Ratam", "Baie Remu", "Baie Repoi", "Baie Résin", "Baie Sailak", "Baie Sédra", "Baie Selro", "Baie Siam", "Baie Sitrus", "Baie Stekpa", "Baie Tamato", "Baie Touga", "Baie Tronci", "Baie Wiki", "Baie Willia", "Baie Yapap", "Baie Zalis"];
 const BERRY_PRICE=300;
 BERRIES.forEach(n=>ITEMS.push({id:"baie-"+n.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""),cat:"berry",name:"Shulker de "+n,price:BERRY_PRICE,unit:""}));
-let berrySel=null;
-const LABEL={farm:"",plat:" (sans matériaux)",platmat:" (avec matériaux)",berry:""};
+const BALLS=[{"id": "ball-poke", "name": "Poké Ball", "price": 600, "metal": "cuivre"}, {"id": "ball-azur", "name": "Azur Ball", "price": 600, "metal": "cuivre"}, {"id": "ball-citrine", "name": "Citrine Ball", "price": 600, "metal": "cuivre"}, {"id": "ball-soin", "name": "Soin Ball", "price": 600, "metal": "cuivre"}, {"id": "ball-honor", "name": "Honor Ball", "price": 600, "metal": "cuivre"}, {"id": "ball-rose", "name": "Rose Ball", "price": 600, "metal": "cuivre"}, {"id": "ball-safari", "name": "Safari Ball", "price": 600, "metal": "cuivre"}, {"id": "ball-ardoise", "name": "Ardoise Ball", "price": 600, "metal": "cuivre"}, {"id": "ball-verdoyante", "name": "Verdoyante Ball", "price": 600, "metal": "cuivre"}, {"id": "ball-poke-anc", "name": "Poké Ball Ancienne", "price": 600, "metal": "cuivre"}, {"id": "ball-azur-anc", "name": "Azur Ball Ancienne", "price": 600, "metal": "cuivre"}, {"id": "ball-citrine-anc", "name": "Citrine Ball Ancienne", "price": 600, "metal": "cuivre"}, {"id": "ball-plume-anc", "name": "Plume Ball Ancienne", "price": 600, "metal": "cuivre"}, {"id": "ball-masse-anc", "name": "Masse Ball Ancienne", "price": 600, "metal": "cuivre"}, {"id": "ball-ivoire-anc", "name": "Ivoire Ball Ancienne", "price": 600, "metal": "cuivre"}, {"id": "ball-rose-anc", "name": "Rose Ball Ancienne", "price": 600, "metal": "cuivre"}, {"id": "ball-ardoise-anc", "name": "Ardoise Ball Ancienne", "price": 600, "metal": "cuivre"}, {"id": "ball-verdoyante-anc", "name": "Verdoyante Ball Ancienne", "price": 600, "metal": "cuivre"}, {"id": "ball-hyper", "name": "Hyper Ball", "price": 1000, "metal": "or"}, {"id": "ball-sombre", "name": "Sombre Ball", "price": 1000, "metal": "or"}, {"id": "ball-love", "name": "Love Ball", "price": 1000, "metal": "or"}, {"id": "ball-luxe", "name": "Luxe Ball", "price": 1000, "metal": "or"}, {"id": "ball-rapide", "name": "Rapide Ball", "price": 1000, "metal": "or"}, {"id": "ball-chrono", "name": "Chrono Ball", "price": 1000, "metal": "or"}, {"id": "ball-hyper-anc", "name": "Hyper Ball Ancienne", "price": 1000, "metal": "or"}, {"id": "ball-gigamasse-anc", "name": "Gigamasse Ball Ancienne", "price": 1000, "metal": "or"}, {"id": "ball-propulse-anc", "name": "Propulse Ball Ancienne", "price": 1000, "metal": "or"}];
+BALLS.forEach(b=>ITEMS.push({id:b.id,cat:"ball",name:"Shulker de "+b.name,price:b.price,unit:"",metal:b.metal}));
+let berrySel=null,ballSel=null;
+const LABEL={farm:"",plat:" (sans matériaux)",platmat:" (avec matériaux)",berry:"",ball:""};
 const fmt=n=>n.toLocaleString("fr-FR").replace(/ | /g," ")+" $";
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const $=id=>document.getElementById(id);
@@ -461,8 +463,18 @@ function renderCatalog(){
   $("catalog").innerHTML=(INFO[cat]?`<p class="info">${INFO[cat]}</p>`:"")+ITEMS.filter(i=>i.cat===cat).map(i=>`
     <div class="card"><h3>${i.name}</h3>${i.unit?`<small>${i.unit}</small>`:""}<div class="price">${fmt(i.price)}</div>
     <div class="qty"><button type="button" data-d="-1" data-id="${i.id}" aria-label="Retirer ${i.name}">−</button>
-    <output>${cart[i.id]||0}</output><button type="button" data-d="1" data-id="${i.id}" aria-label="Ajouter ${i.name}">+</button></div></div>`).join("")+(cat==="farm"?berryCard():"");
+    <output>${cart[i.id]||0}</output><button type="button" data-d="1" data-id="${i.id}" aria-label="Ajouter ${i.name}">+</button></div></div>`).join("")+(cat==="farm"?berryCard()+ballCard():"");
   const sel=$("berrySel");if(sel)sel.onchange=()=>{berrySel=sel.value;renderCatalog();sfx("click")};
+  const bs=$("ballSel");if(bs)bs.onchange=()=>{ballSel=bs.value;renderCatalog();sfx("click")};
+}
+function ballCard(){
+  const list=ITEMS.filter(i=>i.cat==="ball");if(!ballSel)ballSel=list[0].id;
+  const cur=list.find(i=>i.id===ballSel),inCart=list.filter(i=>cart[i.id]>0).length;
+  const opt=i=>`<option value="${i.id}" ${i.id===ballSel?"selected":""}>${esc(i.name.replace("Shulker de ",""))}${cart[i.id]?` (${cart[i.id]})`:""}</option>`;
+  return `<div class="card berry"><h3>Shulker de Poké Balls</h3><small>${list.length} Balls au choix : 600 $ avec du cuivre, 1 000 $ avec de l'or${inCart?` · ${inCart} type${inCart>1?"s":""} dans ta commande`:""}</small>
+    <select id="ballSel" aria-label="Choisir la Ball"><optgroup label="Cuivre : 600 $ le shulker">${list.filter(i=>i.metal==="cuivre").map(opt).join("")}</optgroup><optgroup label="Or : 1 000 $ le shulker">${list.filter(i=>i.metal==="or").map(opt).join("")}</optgroup></select>
+    <div class="price">${fmt(cur.price)}</div>
+    <div class="qty"><button type="button" data-d="-1" data-id="${cur.id}" aria-label="Retirer ${esc(cur.name)}">−</button><output>${cart[cur.id]||0}</output><button type="button" data-d="1" data-id="${cur.id}" aria-label="Ajouter ${esc(cur.name)}">+</button></div></div>`;
 }
 function berryCard(){
   const list=ITEMS.filter(i=>i.cat==="berry");if(!berrySel)berrySel=list[0].id;
