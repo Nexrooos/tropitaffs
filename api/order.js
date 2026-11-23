@@ -19,7 +19,7 @@ for (const n of require("../data/berries.json")) {
   const id = "baie-" + n.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   CATALOG[id] = ["Shulker de " + n, BERRY_PRICE];
 }
-// Shulkers de Poké Balls : 600 $ (cuivre dans le craft), 1 000 $ (or dans le craft)
+// Shulkers de Poké Balls : 600 $ (cuivre), 800 $ (fer), 1 000 $ (or) selon le métal du craft ; 10 max par personne
 for (const b of require("../data/balls.json")) CATALOG[b.id] = ["Shulker de " + b.name, b.price];
 for (const [n, [sans, avec]] of Object.entries(PLATS)) {
   CATALOG["p" + n] = [`Plat ${n}x${n} (sans matériaux)`, sans];
@@ -82,6 +82,8 @@ module.exports = async (req, res) => {
     qty: clean(str(c && c.qty, 60)),
     budget: clean(str(c && c.budget, 30)),
   }));
+  const ballTotal = Object.entries(cart).filter(([id]) => id.startsWith("ball-")).reduce((t, [, q]) => t + Math.max(0, Math.floor(Number(q)) || 0), 0);
+  if (ballTotal > 10) return res.status(400).json({ error: "Maximum 10 shulkers de Poké Balls par personne." });
   if (!lines.length && !customs.length) return res.status(400).json({ error: "Ta commande est vide." });
   const cdetail = customs
     .map((c) => `• **${c.kind}**${c.qty ? " (" + c.qty + ")" : ""}${c.budget ? " — budget " + c.budget : ""}\n${c.desc}`)
