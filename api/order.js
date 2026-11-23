@@ -13,6 +13,12 @@ const CATALOG = {
   fer: ["Shulker de blocs de fer", 7000],
   bisball: ["Shulker de Bis Ball", 1000, 10],
 };
+// Shulkers de baies : les 70 baies de Cobblemon, toutes au même prix
+const BERRY_PRICE = 300;
+for (const n of require("../data/berries.json")) {
+  const id = "baie-" + n.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  CATALOG[id] = ["Shulker de " + n, BERRY_PRICE];
+}
 for (const [n, [sans, avec]] of Object.entries(PLATS)) {
   CATALOG["p" + n] = [`Plat ${n}x${n} (sans matériaux)`, sans];
   CATALOG["m" + n] = [`Plat ${n}x${n} (avec matériaux)`, avec];
