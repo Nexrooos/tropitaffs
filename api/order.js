@@ -8,7 +8,7 @@ const CATALOG = {
   verre: ["Shulker de verre", 450],
   mousse: ["Shulker de mousse", 300],
   trap: ["Shulker de trappes en bambou", 1400],
-  planches: ["Shulker de planches de bambou", 600],
+  planches: ["Shulker de planches de bambou", 180],
   stone: ["Shulker de stone", 500],
   fer: ["Shulker de blocs de fer", 7000],
   bisball: ["Shulker de Bis Ball", 1000, 10],
