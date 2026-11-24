@@ -16,3 +16,10 @@ module.exports.redis = async (cmd) => {
   if (j.error) throw new Error(j.error);
   return j.result;
 };
+
+// Comptes Discord bannis du site (commandes impossibles, abusives ou sans l'argent).
+// Ils ne peuvent plus commander, faire de demande de Pokémon ni acheter de tickets.
+module.exports.BANNED = [
+  "949672486189023232", // banni le 24/11/2026 à la demande de Nexro
+];
+module.exports.BAN_MSG = "Tu as été banni du site TropiTaffs. Contacte l'équipe sur Discord si tu penses que c'est une erreur.";

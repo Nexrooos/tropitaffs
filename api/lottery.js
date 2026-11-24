@@ -157,6 +157,8 @@ module.exports = async (req, res) => {
     const action = str(body.action, 20);
     if (action === "state") return res.status(200).json(publicState(round, user, isAdmin, hist));
     if (!user) return res.status(401).json({ error: "Connecte-toi avec Discord." });
+    const { BANNED, BAN_MSG } = require("./_team.js");
+    if (BANNED.includes(user.id)) return res.status(403).json({ error: BAN_MSG, banned: true });
     if (action === "buy") {
       if (Date.now() >= round.end) return res.status(409).json({ error: "Le tirage est en cours, réessaie dans un instant." });
       const qty = Math.floor(Number(body.qty));

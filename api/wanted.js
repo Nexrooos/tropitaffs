@@ -4,7 +4,7 @@
 // Les demandes en cours restent privées (le joueur voit les siennes, l'équipe voit tout).
 // Seules les ventes terminées sont publiques (Pokémon, IV, talent caché, shiny, prix) pour suivre les prix.
 const FAMILIES = require("../data/pokemon.json");
-const { ADMINS, redis } = require("./_team.js");
+const { ADMINS, redis, BANNED, BAN_MSG } = require("./_team.js");
 const crypto = require("crypto");
 
 const BY_ID = new Map(), FAM_OF = new Map();
@@ -78,6 +78,7 @@ module.exports = async (req, res) => {
     return res.status(502).json({ error: "Discord ne répond pas, réessaie." });
   }
   const isAdmin = ADMINS.includes(user.id);
+  if (BANNED.includes(user.id)) return res.status(403).json({ error: BAN_MSG, banned: true });
 
   try {
     // ---------- Joueur : mes demandes, annuler ----------

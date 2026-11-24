@@ -55,6 +55,8 @@ module.exports = async (req, res) => {
     const r = await fetch("https://discord.com/api/users/@me", { headers: { Authorization: "Bearer " + token } });
     if (!r.ok) return res.status(401).json({ error: "Ta connexion Discord a expiré, reconnecte-toi." });
     user = await r.json();
+    const { BANNED, BAN_MSG } = require("./_team.js");
+    if (BANNED.includes(user.id)) return res.status(403).json({ error: BAN_MSG, banned: true });
   } catch {
     return res.status(502).json({ error: "Discord ne répond pas, réessaie." });
   }
