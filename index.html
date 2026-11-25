@@ -69,6 +69,15 @@ h2{font-size:clamp(14px,1.8vw,20px);margin:0 0 8px}
 .card.berry select{font:16px Nunito,sans-serif;padding:10px;border-radius:10px;border:3px solid var(--line);background:var(--card);color:var(--ink);min-height:44px;width:100%}
 .pkbar{display:flex;flex-wrap:wrap;align-items:end;gap:10px 16px;margin-bottom:14px}.pksearch{flex:1 1 320px;max-width:520px}
 .pklist{display:grid;gap:8px}
+.bx{background:var(--card);border:3px solid #1b1f2a;border-radius:14px;padding:18px 20px;box-shadow:0 6px 0 #1b1f2a}
+.bxtabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}.bxtabs button{font:inherit;font-weight:700;padding:6px 14px;border-radius:999px;border:2px solid #1b1f2a;background:var(--sand);color:var(--ink);cursor:pointer}.bxtabs button[aria-pressed=true]{background:#1b1f2a;color:#fff}
+.bxhead{display:flex;flex-wrap:wrap;gap:10px 28px;align-items:flex-end;margin:0 0 12px}.bxbig{font-size:clamp(26px,4vw,38px);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.bxvar{font-weight:700;font-size:15px;margin-left:8px}.bxk{display:flex;flex-direction:column;font-size:13px;color:var(--mute)}.bxk b{font-size:17px;color:var(--ink);font-variant-numeric:tabular-nums}
+.bxchart{position:relative}.bxchart svg{display:block;width:100%;height:auto}.bxchart text{font-size:12px;fill:var(--mute);font-family:inherit}
+.bxtip{position:absolute;pointer-events:none;background:#1b1f2a;color:#fff;border-radius:8px;padding:8px 10px;font-size:13px;line-height:1.4;white-space:nowrap;transform:translate(-50%,-100%);z-index:3}
+.bxtable{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}.bxtable th,.bxtable td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left}.bxtable td.n,.bxtable th.n{text-align:right;font-variant-numeric:tabular-nums}
+.bxadm{margin-top:16px;padding-top:14px;border-top:2px dashed var(--line)}.bxadm form{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:6px 0 10px}.bxadm label{display:flex;flex-direction:column;font-size:13px;color:var(--mute)}.bxadm input{font:inherit;padding:6px 8px;border:2px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:130px}
+.bxadm button{font:inherit;font-weight:700;padding:7px 12px;border-radius:8px;border:2px solid #1b1f2a;background:var(--sand);color:var(--ink);cursor:pointer}
 .wadm{background:var(--card);border:3px solid #1b1f2a;border-radius:14px;padding:18px 20px;box-shadow:0 6px 0 #1b1f2a;margin:0 0 22px}
 .wadm h3{margin:0 0 4px;font-size:19px}.wadm .sum{color:var(--mute);margin:0 0 14px;font-size:14px}
 .wrow{display:grid;grid-template-columns:32px minmax(0,1.2fr) minmax(0,1.4fr) 300px;gap:10px 14px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
@@ -187,7 +196,7 @@ footer a{color:#ffcf7a}
 <body>
 <header><div class="wrap">
   <a class="logo" href="#top"><img src="logo-sm.png" alt="TropiTaffs" width="96" height="56"></a>
-  <nav><a href="#services">Services</a><a href="#commande">Commander</a><a href="#pokemon">Pokémon</a><a href="#pkMine" id="navMine" class="navmine" hidden>Mes demandes</a><a href="#loterie">Loterie</a><a href="#infos">Infos</a><a href="#contact">Contact</a><span id="me"></span><button type="button" id="snd" class="snd" aria-pressed="true" aria-label="Couper le son">🔊</button></nav>
+  <nav><a href="#services">Services</a><a href="#commande">Commander</a><a href="#pokemon">Pokémon</a><a href="#pkMine" id="navMine" class="navmine" hidden>Mes demandes</a><a href="#bourse">Bourse</a><a href="#loterie">Loterie</a><a href="#infos">Infos</a><a href="#contact">Contact</a><span id="me"></span><button type="button" id="snd" class="snd" aria-pressed="true" aria-label="Couper le son">🔊</button></nav>
 </div></header>
 
 <section class="hero" id="top">
@@ -328,6 +337,12 @@ S.innerHTML=`<g transform="scale(4)">${o}</g><text x="896" y="414" text-anchor="
   <div class="pklist" id="pkList"><p class="note">Chargement de la liste…</p></div>
   <div style="text-align:center;margin-top:14px"><button type="button" class="btn" id="pkMore" hidden>Afficher plus de familles</button></div>
   <p class="note" style="margin-top:14px">« › » = évolution, « / » = forme régionale du Pokémon juste avant. Liste des Pokémon disponibles dans Cobblemon 1.8.4, regroupés par famille d'évolution avec leurs formes régionales (Alola, Galar, Hisui, Paldea), sans les légendaires ni les fabuleux.</p>
+</div></section>
+
+<section class="band alt" id="bourse"><div class="wrap">
+  <h2 class="px">Bourse de Tropimon</h2>
+  <p class="lead">Le cours des ressources d'après les ventes à l'Hôtel des ventes de Tropimon. Prix ramenés à un stack de 64 pour comparer les ventes entre elles.</p>
+  <div id="bxApp" class="bx"><p class="note">Chargement de la bourse…</p></div>
 </div></section>
 
 <section class="band lot" id="loterie"><div class="wrap">
@@ -541,7 +556,7 @@ function renderAuth(){
     $("me").innerHTML=`<a class="me" href="#commande" title="Connecté avec Discord : @${esc(user.name)}"><span class="av"><img src="${esc(user.avatar)}" alt=""><span class="dot"></span></span><span class="nm">${esc(user.display)}</span></a>`;
     top.outerHTML=`<span class="btn hero-me" id="loginTop"><img src="${esc(user.avatar)}" alt="">Connecté : ${esc(user.display)} ✅</span>`;
     $("authBox").innerHTML=`<div class="who"><img src="${esc(user.avatar)}" alt=""><div><b>${esc(user.display)}</b><br><span class="note">@${esc(user.name)} · connecté via Discord</span></div><button type="button" class="btn x" id="logout">Déconnexion</button></div>`;
-    $("logout").onclick=()=>{user=null;store.del("tt_user");renderAuth();lotLoad();wLoad()};
+    $("logout").onclick=()=>{user=null;store.del("tt_user");renderAuth();lotLoad();wLoad();bxLoad()};
   }else{
     $("me").innerHTML=`<button type="button" class="me out" id="loginNav">Connexion</button>`;$("loginNav").onclick=login;
     if(top.tagName!=="BUTTON")top.outerHTML=`<button class="btn discord" type="button" id="loginTop">Connexion Discord</button>`;
@@ -843,7 +858,67 @@ async function lotLoad(){
 $("mc").value=store.get("tt_mc")||"";
 $("mc").addEventListener("input",()=>store.set("tt_mc",$("mc").value));
 renderCatalog();renderRecap();
-handleReturn().then(()=>{renderAuth();lotLoad();wLoad()});
+
+/* ===== Bourse ===== */
+let BX=null,bxItem="farine",bxTable=false;
+async function bxCall(payload){const r=await fetch("/api/bourse",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:user&&user.token,...payload})});const d=await r.json().catch(()=>({error:"Réponse invalide du serveur."}));if(!r.ok)throw new Error(d.error||"Erreur");return d}
+const bxDay=d=>new Date(d+"T12:00:00");
+const bxFmtD=(d,o={day:"2-digit",month:"2-digit"})=>bxDay(d).toLocaleDateString("fr-FR",o);
+const per64=x=>Math.round(x.p*64/x.q);
+function bxDays(sales){const m=new Map();sales.forEach(x=>{const k=x.d;if(!m.has(k))m.set(k,[]);m.get(k).push(x)});
+  return [...m.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([d,l])=>{const v=l.map(per64),q=l.reduce((s,x)=>s+x.q,0);
+    return {d,n:l.length,q,avg:Math.round(l.reduce((s,x)=>s+x.p,0)*64/q),min:Math.min(...v),max:Math.max(...v),pts:v}})}
+function bxRender(msg){
+  const box=$("bxApp");if(!BX){box.innerHTML=`<p class="note">La bourse est indisponible pour le moment.</p>`;return}
+  const it=BX.data[bxItem]||{sales:[],ask:null},sales=it.sales.map((x,i)=>({...x,i})),days=bxDays(sales),ask=it.ask,name=BX.items[bxItem];
+  const tabs=Object.keys(BX.items).length>1?`<div class="bxtabs">${Object.entries(BX.items).map(([k,v])=>`<button type="button" data-bx="${k}" aria-pressed="${k===bxItem}">${esc(v)}</button>`).join("")}</div>`:"";
+  let head="",chart=`<p class="note">Pas encore de vente relevée pour ${esc(name.toLowerCase())}.</p>`,table="";
+  if(days.length){
+    const last=days[days.length-1],med=a=>{const b=[...a].sort((x,y)=>x-y),m=b.length>>1;return Math.round(b.length%2?b[m]:(b[m-1]+b[m])/2)};
+    const cours=med(sales.slice(-10).map(per64)),base=days[0].avg,vr=days.length>1?(cours-base)/base*100:null;
+    const all=days.flatMap(d=>d.pts),lo=Math.min(...all),hi=Math.max(...all),vol=days.reduce((s,d)=>s+d.q,0);
+    const vcol=vr==null?"var(--mute)":vr>=0?"#1f9d55":"var(--red)";
+    head=`<div class="bxhead"><div><div class="note" style="margin:0 0 4px">Cours de ${esc(name.toLowerCase())} (stack de 64)</div><span class="bxbig">${fmt(cours)}</span>${vr!=null?`<span class="bxvar" style="color:${vcol}">${vr>=0?"▲ +":"▼ "}${vr.toFixed(1).replace(".",",")} % depuis le ${bxFmtD(days[0].d)}</span>`:""}<div class="note" style="margin:4px 0 0;font-size:12px">Prix médian des ${Math.min(10,sales.length)} dernières ventes</div></div>
+      ${ask?`<div class="bxk">Offre en vente<b>${fmt(per64(ask))}</b></div>`:""}<div class="bxk">Plus bas<b>${fmt(lo)}</b></div><div class="bxk">Plus haut<b>${fmt(hi)}</b></div><div class="bxk">Ventes<b>${sales.length}</b></div><div class="bxk">Volume<b>${vol.toLocaleString("fr-FR")} unités</b></div></div>`;
+    // Graphique
+    const W=box.clientWidth<600?440:760,H=300,L=58,R=20,T=18,B=34,first=bxDay(days[0].d).getTime(),endD=ask&&ask.d>last.d?ask.d:last.d,end=bxDay(endD).getTime(),span=Math.max(86400000,end-first);
+    const allY=[...all,...(ask?[per64(ask)]:[])];let y0=Math.min(...allY),y1=Math.max(...allY);const pad=Math.max(20,(y1-y0)*.15);y0=Math.max(0,Math.floor((y0-pad)/50)*50);y1=Math.ceil((y1+pad)/50)*50;
+    const X=d=>L+(bxDay(d).getTime()-first)/span*(W-L-R),Y=v=>T+(1-(v-y0)/(y1-y0))*(H-T-B);
+    const step=Math.max(50,Math.ceil((y1-y0)/4/50)*50);let grid="";for(let v=y0;v<=y1;v+=step)grid+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-8}" y="${Y(v)+4}" text-anchor="end">${v}</text>`;
+    let xl="";const nd=Math.round(span/86400000);for(let k=0;k<=nd;k++){const d=new Date(first+k*86400000).toISOString().slice(0,10);if(nd>14&&k%Math.ceil(nd/10))continue;xl+=`<text x="${X(d)}" y="${H-10}" text-anchor="middle">${bxFmtD(d)}</text>`}
+    const line=days.map((d,i)=>`${i?"L":"M"}${X(d.d).toFixed(1)},${Y(d.avg).toFixed(1)}`).join(" ");
+    const area=`${line} L${X(last.d).toFixed(1)},${H-B} L${X(days[0].d).toFixed(1)},${H-B} Z`;
+    const dots=days.flatMap(d=>d.pts.map(v=>`<circle cx="${X(d.d)}" cy="${Y(v)}" r="4" fill="var(--sea)" fill-opacity=".28"/>`)).join("");
+    const avgDots=days.map(d=>`<circle cx="${X(d.d)}" cy="${Y(d.avg)}" r="5" fill="var(--sea)" stroke="var(--card)" stroke-width="2"/>`).join("");
+    const askM=ask?`<line x1="${X(last.d)}" x2="${X(ask.d)}" y1="${Y(last.avg)}" y2="${Y(per64(ask))}" stroke="var(--sea)" stroke-width="2" stroke-dasharray="5 5"/><rect x="${X(ask.d)-6}" y="${Y(per64(ask))-6}" width="12" height="12" rx="2" fill="var(--card)" stroke="var(--sea)" stroke-width="2"/><text x="${X(ask.d)-10}" y="${Y(per64(ask))-12}" text-anchor="end" style="fill:var(--ink);font-weight:700" dy="34">Offre ${per64(ask)}</text>`:"";
+    const hits=days.map((d,i)=>`<rect data-bxd="${i}" data-cy="${Y(d.max)}" x="${X(d.d)-18}" y="${T}" width="36" height="${H-T-B}" fill="transparent"/>`).join("")+(ask?`<rect data-bxa="1" data-cy="${Y(per64(ask))}" x="${X(ask.d)-18}" y="${T}" width="36" height="${H-T-B}" fill="transparent"/>`:"");
+    chart=`<div class="bxchart" id="bxChart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cours de ${esc(name)} par jour, prix pour 64">${grid}<line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="var(--mute)" stroke-width="1"/>${xl}
+      <path d="${area}" fill="var(--sea)" fill-opacity=".08"/>${dots}<path d="${line}" fill="none" stroke="var(--sea)" stroke-width="2" stroke-linejoin="round"/>${avgDots}${askM}${hits}</svg><div class="bxtip" id="bxTip" hidden></div></div>
+      <p class="note" style="margin:6px 0 0">Ligne : prix moyen du jour pour 64 unités. Petits points : chaque vente. Carré : l'offre actuellement en vente. <button type="button" class="linkbtn" id="bxTgl">${bxTable?"Masquer":"Voir"} le détail des ventes</button></p>`;
+    if(bxTable)table=`<div style="overflow-x:auto"><table class="bxtable"><thead><tr><th>Date</th><th class="n">Quantité</th><th class="n">Prix</th><th class="n">Prix pour 64</th>${BX.isAdmin?"<th></th>":""}</tr></thead><tbody>${[...sales].reverse().map(x=>`<tr><td>${bxFmtD(x.d,{day:"2-digit",month:"2-digit",year:"numeric"})}</td><td class="n">x${x.q}</td><td class="n">${fmt(x.p)}</td><td class="n">${fmt(per64(x))}</td>${BX.isAdmin?`<td><button type="button" class="linkbtn" data-bxdel="${x.i}">Supprimer</button></td>`:""}</tr>`).join("")}</tbody></table></div>`;
+    box._days=days;box._ask=ask;
+  }
+  const today=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+  const adm=BX.isAdmin?`<div class="bxadm"><h3 style="margin:0">Équipe : mettre à jour le cours de ${esc(name.toLowerCase())}</h3>
+    <form id="bxAdd"><label>Date<input type="date" name="d" value="${today}" required></label><label>Quantité<input type="number" name="q" value="64" min="1" max="1728" required></label><label>Prix total<input type="number" name="p" min="1" required></label><button name="act" value="add">Ajouter une vente</button><button name="act" value="ask">Définir comme offre en vente</button>${ask?`<button type="button" id="bxNoAsk">Retirer l'offre</button>`:""}</form>
+    <p class="note" style="margin:0">Recopie les « Anciennes ventes similaires » de l'Hôtel des ventes. Le prix est ramené à 64 automatiquement.</p>${msg?`<p class="note" style="color:var(--red);margin:6px 0 0">${esc(msg)}</p>`:""}</div>`:"";
+  box.innerHTML=tabs+head+chart+table+adm;
+  box._w=box.clientWidth<600;box.querySelectorAll("[data-bx]").forEach(b=>b.onclick=()=>{bxItem=b.dataset.bx;bxRender()});
+  const tg=$("bxTgl");if(tg)tg.onclick=()=>{bxTable=!bxTable;bxRender()};
+  const ch=$("bxChart");if(ch){const tip=$("bxTip"),svg=ch.querySelector("svg");
+    ch.querySelectorAll("[data-bxd],[data-bxa]").forEach(r=>{r.onmouseenter=r.onclick=()=>{let html,cx,cy;
+      if(r.dataset.bxa){const a=box._ask;html=`<b>Offre en vente</b><br>x${a.q} pour ${fmt(a.p)}<br>soit ${fmt(per64(a))} pour 64`;}
+      else{const d=box._days[+r.dataset.bxd];html=`<b>${bxFmtD(d.d,{weekday:"long",day:"numeric",month:"long"})}</b><br>Moyenne : ${fmt(d.avg)} / 64<br>${d.n>1?`De ${fmt(d.min)} à ${fmt(d.max)}<br>`:""}${d.n} vente${d.n>1?"s":""} · ${d.q} unités`}
+      cx=+r.getAttribute("x")+18;cy=+r.dataset.cy;
+      const k=svg.getBoundingClientRect().width/svg.viewBox.baseVal.width;tip.innerHTML=html;tip.hidden=false;tip.style.left=Math.min(Math.max(cx*k,90),ch.clientWidth-90)+"px";tip.style.top=Math.max(cy*k-10,60)+"px"};r.onmouseleave=()=>tip.hidden=true})}
+  const f=$("bxAdd");if(f)f.onsubmit=async e=>{e.preventDefault();const fd=new FormData(f),act=e.submitter&&e.submitter.value||"add";
+    try{BX=await bxCall({action:act,item:bxItem,d:fd.get("d"),q:fd.get("q"),p:fd.get("p")});sfx("win");bxRender()}catch(er){sfx("err");bxRender(er.message)}};
+  const na=$("bxNoAsk");if(na)na.onclick=async()=>{try{BX=await bxCall({action:"noask",item:bxItem});bxRender()}catch(er){bxRender(er.message)}};
+  box.querySelectorAll("[data-bxdel]").forEach(b=>b.onclick=async()=>{if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="Confirmer ?";return}try{BX=await bxCall({action:"del",item:bxItem,i:+b.dataset.bxdel});bxRender()}catch(er){bxRender(er.message)}});
+}
+addEventListener("resize",()=>{const b=$("bxApp");if(BX&&b._w!==undefined&&b._w!==(b.clientWidth<600))bxRender()});
+async function bxLoad(){try{BX=await bxCall({action:"state"})}catch(e){BX=null}bxRender()}
+handleReturn().then(()=>{renderAuth();lotLoad();wLoad();bxLoad()});
 }
 </script>
 </body>
