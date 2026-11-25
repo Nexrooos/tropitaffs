@@ -870,7 +870,7 @@ function bxDays(sales){const m=new Map();sales.forEach(x=>{const k=x.d;if(!m.has
     return {d,n:l.length,q,avg:Math.round(l.reduce((s,x)=>s+x.p,0)*64/q),min:Math.min(...v),max:Math.max(...v),pts:v}})}
 function bxRender(msg){
   const box=$("bxApp");if(!BX){box.innerHTML=`<p class="note">La bourse est indisponible pour le moment.</p>`;return}
-  const it=BX.data[bxItem]||{sales:[],ask:null},sales=it.sales.map((x,i)=>({...x,i})),days=bxDays(sales),ask=it.ask,name=BX.items[bxItem];
+  const it=BX.data[bxItem]||{sales:[],asks:[]},sales=it.sales.map((x,i)=>({...x,i})),days=bxDays(sales),asks=(it.asks||[]).map((a,i)=>({...a,i,u:per64(a)})).sort((a,b)=>a.u-b.u),ask=asks[0]||null,name=BX.items[bxItem];
   const tabs=Object.keys(BX.items).length>1?`<div class="bxtabs">${Object.entries(BX.items).map(([k,v])=>`<button type="button" data-bx="${k}" aria-pressed="${k===bxItem}">${esc(v)}</button>`).join("")}</div>`:"";
   let head="",chart=`<p class="note">Pas encore de vente relevée pour ${esc(name.toLowerCase())}.</p>`,table="";
   if(days.length){
@@ -879,10 +879,10 @@ function bxRender(msg){
     const all=days.flatMap(d=>d.pts),lo=Math.min(...all),hi=Math.max(...all),vol=days.reduce((s,d)=>s+d.q,0);
     const vcol=vr==null?"var(--mute)":vr>=0?"#1f9d55":"var(--red)";
     head=`<div class="bxhead"><div><div class="note" style="margin:0 0 4px">Cours de ${esc(name.toLowerCase())} (stack de 64)</div><span class="bxbig">${fmt(cours)}</span>${vr!=null?`<span class="bxvar" style="color:${vcol}">${vr>=0?"▲ +":"▼ "}${vr.toFixed(1).replace(".",",")} % depuis le ${bxFmtD(days[0].d)}</span>`:""}<div class="note" style="margin:4px 0 0;font-size:12px">Prix médian des ${Math.min(10,sales.length)} dernières ventes</div></div>
-      ${ask?`<div class="bxk">Offre en vente<b>${fmt(per64(ask))}</b></div>`:""}<div class="bxk">Plus bas<b>${fmt(lo)}</b></div><div class="bxk">Plus haut<b>${fmt(hi)}</b></div><div class="bxk">Ventes<b>${sales.length}</b></div><div class="bxk">Volume<b>${vol.toLocaleString("fr-FR")} unités</b></div></div>`;
+      ${ask?`<div class="bxk">${asks.length>1?`Meilleure offre (${asks.length} en vente)`:"Offre en vente"}<b>${fmt(ask.u)}</b></div>`:""}<div class="bxk">Plus bas<b>${fmt(lo)}</b></div><div class="bxk">Plus haut<b>${fmt(hi)}</b></div><div class="bxk">Ventes<b>${sales.length}</b></div><div class="bxk">Volume<b>${vol.toLocaleString("fr-FR")} unités</b></div></div>`;
     // Graphique
-    const W=box.clientWidth<600?440:760,H=300,L=58,R=20,T=18,B=34,first=bxDay(days[0].d).getTime(),endD=ask&&ask.d>last.d?ask.d:last.d,end=bxDay(endD).getTime(),span=Math.max(86400000,end-first);
-    const allY=[...all,...(ask?[per64(ask)]:[])];let y0=Math.min(...allY),y1=Math.max(...allY);const pad=Math.max(20,(y1-y0)*.15);y0=Math.max(0,Math.floor((y0-pad)/50)*50);y1=Math.ceil((y1+pad)/50)*50;
+    const W=box.clientWidth<600?440:760,H=300,L=58,R=20,T=18,B=34,first=bxDay(days[0].d).getTime(),endD=asks.reduce((m,a)=>a.d>m?a.d:m,last.d),end=bxDay(endD).getTime(),span=Math.max(86400000,end-first);
+    const allY=[...all,...asks.map(a=>a.u)];let y0=Math.min(...allY),y1=Math.max(...allY);const pad=Math.max(20,(y1-y0)*.15);y0=Math.max(0,Math.floor((y0-pad)/50)*50);y1=Math.ceil((y1+pad)/50)*50;
     const X=d=>L+(bxDay(d).getTime()-first)/span*(W-L-R),Y=v=>T+(1-(v-y0)/(y1-y0))*(H-T-B);
     const step=Math.max(50,Math.ceil((y1-y0)/4/50)*50);let grid="";for(let v=y0;v<=y1;v+=step)grid+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-8}" y="${Y(v)+4}" text-anchor="end">${v}</text>`;
     let xl="";const nd=Math.round(span/86400000);for(let k=0;k<=nd;k++){const d=new Date(first+k*86400000).toISOString().slice(0,10);if(nd>14&&k%Math.ceil(nd/10))continue;xl+=`<text x="${X(d)}" y="${H-10}" text-anchor="middle">${bxFmtD(d)}</text>`}
@@ -890,30 +890,32 @@ function bxRender(msg){
     const area=`${line} L${X(last.d).toFixed(1)},${H-B} L${X(days[0].d).toFixed(1)},${H-B} Z`;
     const dots=days.flatMap(d=>d.pts.map(v=>`<circle cx="${X(d.d)}" cy="${Y(v)}" r="4" fill="var(--sea)" fill-opacity=".28"/>`)).join("");
     const avgDots=days.map(d=>`<circle cx="${X(d.d)}" cy="${Y(d.avg)}" r="5" fill="var(--sea)" stroke="var(--card)" stroke-width="2"/>`).join("");
-    const askM=ask?`<line x1="${X(last.d)}" x2="${X(ask.d)}" y1="${Y(last.avg)}" y2="${Y(per64(ask))}" stroke="var(--sea)" stroke-width="2" stroke-dasharray="5 5"/><rect x="${X(ask.d)-6}" y="${Y(per64(ask))-6}" width="12" height="12" rx="2" fill="var(--card)" stroke="var(--sea)" stroke-width="2"/><text x="${X(ask.d)-10}" y="${Y(per64(ask))-12}" text-anchor="end" style="fill:var(--ink);font-weight:700" dy="34">Offre ${per64(ask)}</text>`:"";
-    const hits=days.map((d,i)=>`<rect data-bxd="${i}" data-cy="${Y(d.max)}" x="${X(d.d)-18}" y="${T}" width="36" height="${H-T-B}" fill="transparent"/>`).join("")+(ask?`<rect data-bxa="1" data-cy="${Y(per64(ask))}" x="${X(ask.d)-18}" y="${T}" width="36" height="${H-T-B}" fill="transparent"/>`:"");
+    const askM=ask?`<line x1="${X(last.d)}" x2="${X(ask.d)}" y1="${Y(last.avg)}" y2="${Y(ask.u)}" stroke="var(--sea)" stroke-width="2" stroke-dasharray="5 5"/>`+asks.map(a=>`<rect x="${X(a.d)-6}" y="${Y(a.u)-6}" width="12" height="12" rx="2" fill="var(--card)" stroke="var(--sea)" stroke-width="2"/>`).join("")+`<text x="${X(ask.d)+6}" y="${Y(ask.u)+26}" text-anchor="end" style="fill:var(--ink);font-weight:700">${asks.length>1?`Offres ${ask.u} à ${asks[asks.length-1].u}`:`Offre ${ask.u}`}</text>`:"";
+    const hits=days.map((d,i)=>`<rect data-bxd="${i}" data-cy="${Y(d.max)}" x="${X(d.d)-18}" y="${T}" width="36" height="${H-T-B}" fill="transparent"/>`).join("");
+    const hitA=ask?`<rect data-bxa="1" data-cy="${Y(asks[asks.length-1].u)}" x="${X(ask.d)-18}" y="${T}" width="36" height="${H-T-B}" fill="transparent"/>`:"";
     chart=`<div class="bxchart" id="bxChart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cours de ${esc(name)} par jour, prix pour 64">${grid}<line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="var(--mute)" stroke-width="1"/>${xl}
-      <path d="${area}" fill="var(--sea)" fill-opacity=".08"/>${dots}<path d="${line}" fill="none" stroke="var(--sea)" stroke-width="2" stroke-linejoin="round"/>${avgDots}${askM}${hits}</svg><div class="bxtip" id="bxTip" hidden></div></div>
-      <p class="note" style="margin:6px 0 0">Ligne : prix moyen du jour pour 64 unités. Petits points : chaque vente. Carré : l'offre actuellement en vente. <button type="button" class="linkbtn" id="bxTgl">${bxTable?"Masquer":"Voir"} le détail des ventes</button></p>`;
+      <path d="${area}" fill="var(--sea)" fill-opacity=".08"/>${dots}<path d="${line}" fill="none" stroke="var(--sea)" stroke-width="2" stroke-linejoin="round"/>${avgDots}${askM}${hits}${hitA}</svg><div class="bxtip" id="bxTip" hidden></div></div>
+      <p class="note" style="margin:6px 0 0">Ligne : prix moyen du jour pour 64 unités. Petits points : chaque vente. Carrés : les offres actuellement en vente. <button type="button" class="linkbtn" id="bxTgl">${bxTable?"Masquer":"Voir"} le détail des ventes</button></p>`;
     if(bxTable)table=`<div style="overflow-x:auto"><table class="bxtable"><thead><tr><th>Date</th><th class="n">Quantité</th><th class="n">Prix</th><th class="n">Prix pour 64</th>${BX.isAdmin?"<th></th>":""}</tr></thead><tbody>${[...sales].reverse().map(x=>`<tr><td>${bxFmtD(x.d,{day:"2-digit",month:"2-digit",year:"numeric"})}</td><td class="n">x${x.q}</td><td class="n">${fmt(x.p)}</td><td class="n">${fmt(per64(x))}</td>${BX.isAdmin?`<td><button type="button" class="linkbtn" data-bxdel="${x.i}">Supprimer</button></td>`:""}</tr>`).join("")}</tbody></table></div>`;
-    box._days=days;box._ask=ask;
+    box._days=days;box._asks=asks;
   }
   const today=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
   const adm=BX.isAdmin?`<div class="bxadm"><h3 style="margin:0">Équipe : mettre à jour le cours de ${esc(name.toLowerCase())}</h3>
-    <form id="bxAdd"><label>Date<input type="date" name="d" value="${today}" required></label><label>Quantité<input type="number" name="q" value="64" min="1" max="1728" required></label><label>Prix total<input type="number" name="p" min="1" required></label><button name="act" value="add">Ajouter une vente</button><button name="act" value="ask">Définir comme offre en vente</button>${ask?`<button type="button" id="bxNoAsk">Retirer l'offre</button>`:""}</form>
+    <form id="bxAdd"><label>Date<input type="date" name="d" value="${today}" required></label><label>Quantité<input type="number" name="q" value="64" min="1" max="1728" required></label><label>Prix total<input type="number" name="p" min="1" required></label><button name="act" value="add">Ajouter une vente</button><button name="act" value="ask">Ajouter une offre en vente</button></form>
+    ${asks.length?`<p class="note" style="margin:0 0 8px">Offres en vente : ${asks.map(a=>`x${a.q} à ${fmt(a.p)} <button type="button" class="linkbtn" data-bxna="${a.i}">retirer</button>`).join(" · ")}</p>`:""}
     <p class="note" style="margin:0">Recopie les « Anciennes ventes similaires » de l'Hôtel des ventes. Le prix est ramené à 64 automatiquement.</p>${msg?`<p class="note" style="color:var(--red);margin:6px 0 0">${esc(msg)}</p>`:""}</div>`:"";
   box.innerHTML=tabs+head+chart+table+adm;
   box._w=box.clientWidth<600;box.querySelectorAll("[data-bx]").forEach(b=>b.onclick=()=>{bxItem=b.dataset.bx;bxRender()});
   const tg=$("bxTgl");if(tg)tg.onclick=()=>{bxTable=!bxTable;bxRender()};
   const ch=$("bxChart");if(ch){const tip=$("bxTip"),svg=ch.querySelector("svg");
     ch.querySelectorAll("[data-bxd],[data-bxa]").forEach(r=>{r.onmouseenter=r.onclick=()=>{let html,cx,cy;
-      if(r.dataset.bxa){const a=box._ask;html=`<b>Offre en vente</b><br>x${a.q} pour ${fmt(a.p)}<br>soit ${fmt(per64(a))} pour 64`;}
+      if(r.dataset.bxa){html=`<b>Offre${box._asks.length>1?"s":""} en vente</b><br>`+box._asks.map(a=>`x${a.q} pour ${fmt(a.p)}${a.q!==64?` (${fmt(a.u)} / 64)`:""}`).join("<br>")}
       else{const d=box._days[+r.dataset.bxd];html=`<b>${bxFmtD(d.d,{weekday:"long",day:"numeric",month:"long"})}</b><br>Moyenne : ${fmt(d.avg)} / 64<br>${d.n>1?`De ${fmt(d.min)} à ${fmt(d.max)}<br>`:""}${d.n} vente${d.n>1?"s":""} · ${d.q} unités`}
       cx=+r.getAttribute("x")+18;cy=+r.dataset.cy;
       const k=svg.getBoundingClientRect().width/svg.viewBox.baseVal.width;tip.innerHTML=html;tip.hidden=false;tip.style.left=Math.min(Math.max(cx*k,90),ch.clientWidth-90)+"px";tip.style.top=Math.max(cy*k-10,60)+"px"};r.onmouseleave=()=>tip.hidden=true})}
   const f=$("bxAdd");if(f)f.onsubmit=async e=>{e.preventDefault();const fd=new FormData(f),act=e.submitter&&e.submitter.value||"add";
     try{BX=await bxCall({action:act,item:bxItem,d:fd.get("d"),q:fd.get("q"),p:fd.get("p")});sfx("win");bxRender()}catch(er){sfx("err");bxRender(er.message)}};
-  const na=$("bxNoAsk");if(na)na.onclick=async()=>{try{BX=await bxCall({action:"noask",item:bxItem});bxRender()}catch(er){bxRender(er.message)}};
+  box.querySelectorAll("[data-bxna]").forEach(b=>b.onclick=async()=>{try{BX=await bxCall({action:"noask",item:bxItem,i:+b.dataset.bxna});bxRender()}catch(er){bxRender(er.message)}});
   box.querySelectorAll("[data-bxdel]").forEach(b=>b.onclick=async()=>{if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="Confirmer ?";return}try{BX=await bxCall({action:"del",item:bxItem,i:+b.dataset.bxdel});bxRender()}catch(er){bxRender(er.message)}});
 }
 addEventListener("resize",()=>{const b=$("bxApp");if(BX&&b._w!==undefined&&b._w!==(b.clientWidth<600))bxRender()});
