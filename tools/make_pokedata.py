@@ -65,7 +65,7 @@ def depth(k, seen=()):
 # Rareté d'apparition dans la nature (meilleure rareté parmi les apparitions normales, forme de base)
 ORDER = ['common', 'uncommon', 'rare', 'ultra-rare']
 best, snack_only = {}, {}
-for f in glob.glob(SPAWN + '/*.json'):
+for f in glob.glob(SPAWN + '/**/*.json', recursive=True):
     d = json.load(open(f, encoding='utf-8'))
     if d.get('enabled') is False: continue
     for sp in d.get('spawns', []):
@@ -79,7 +79,27 @@ for f in glob.glob(SPAWN + '/*.json'):
             k = k + '|' + reg[0] + ('|' + breed[0] if breed else '')
         target = snack_only if (sp.get('condition') or {}).get('isPokeSnack') else best
         if k not in target or ORDER.index(sp['bucket']) < ORDER.index(target[k]): target[k] = sp['bucket']
+    # Troupeaux (Cobblemon 1.8) : apparitions naturelles en groupe. Un membre minoritaire du troupeau
+    # (moins de 25 % du poids) compte un cran plus rare que le troupeau lui-même.
+    for sp in d.get('spawns', []):
+        if sp.get('type') != 'pokemon-herd' or sp.get('bucket') not in ORDER: continue
+        if (sp.get('condition') or {}).get('isPokeSnack'): continue
+        members = sp.get('herdablePokemon') or []
+        tot = sum(m.get('weight', 1) for m in members) or 1
+        for m in members:
+            parts = str(m.get('pokemon', '')).split()
+            if not parts: continue
+            k = norm(parts[0])
+            reg = [t for t in parts[1:] if t.split('=')[0] in REGIONAL]
+            if reg:
+                breed = [t.split('=')[1] for t in parts[1:] if t.startswith('bull_breed=')]
+                k = k + '|' + reg[0] + ('|' + breed[0] if breed else '')
+            lvl = min(len(ORDER) - 1, ORDER.index(sp['bucket']) + (1 if m.get('weight', 1) / tot < 0.25 else 0))
+            if k not in best or lvl < ORDER.index(best[k]): best[k] = ORDER[lvl]
+# Corrections d'après le terrain sur Tropimon (prioritaires sur les fichiers de Cobblemon)
+OVERRIDE = {'tauros|paldean|combat': 'uncommon', 'tauros|paldean|blaze': 'rare', 'tauros|paldean|aqua': 'rare'}
 def rarity(k):
+    if k in OVERRIDE: return OVERRIDE[k]
     if '|' in k and k not in best and k not in snack_only:
         # forme régionale : toutes races confondues si besoin
         cands = [v for kk, v in best.items() if kk.startswith(k)]
