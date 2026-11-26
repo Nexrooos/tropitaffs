@@ -616,10 +616,10 @@ const rKey=r=>r.replace("*","");
 const rBadge=r=>{const[l,c]=RAR[rKey(r)]||RAR.none;return `<span class="rb ${c}" title="${r.endsWith("*")?"Apparaît seulement avec un Poké Snack":""}">${l}${r.endsWith("*")?" · Snack":""}</span>`};
 const RPTS={common:0,uncommon:1,rare:2,"ultra-rare":3,none:2};
 const STATS=["PV","Attaque","Défense","Atq. Spé.","Déf. Spé.","Vitesse"];
-function ivPoints(iv){const p=iv.filter(v=>v===31).length,hi=iv.some(v=>v>=25&&v<31);return Math.min(5,[0,1,1,2,3,4,5][p]+(hi?1:0))}
+function ivPoints(iv){const p=iv.filter(v=>v===31).length,hi=iv.some(v=>v>=25&&v<31);return Math.min(5,[0,1,2,3,4,5,5][p]+(hi?1:0))}
 const DIFF=[[1,"Facile","#2f9e55"],[3,"Moyen","#3b6fd8"],[5,"Difficile","#8e44c9"],[7,"Très difficile","#d9730d"],[99,"Extrême","#e3352f"]];
 function pkDifficulty(fam,id,iv,tc,shiny){
-  const i=fam.findIndex(m=>m.id===id);const easiest=Math.min(...fam.slice(0,i+1).map(m=>RPTS[rKey(m.r)]));
+  const i=fam.findIndex(m=>m.id===id),form=x=>x.reg?x.id.split("-").slice(1).join("-"):"";const easiest=Math.min(...fam.slice(0,i+1).filter(m=>form(m)===form(fam[i])).map(m=>RPTS[rKey(m.r)]));
   const pts=easiest+(shiny?4:ivPoints(iv))+(tc?2:0);const d=DIFF.find(x=>pts<=x[0]);return{pts,label:d[1],color:d[2],pct:Math.min(100,Math.round((pts+1)/11*100))};
 }
 
@@ -665,7 +665,7 @@ function pkRenderForm(msg){
   const syncDiff=()=>{const id=$("pkMon").value,m=fam.find(x=>x.id===id),tc=!!m.tc&&$("pkAb").value===m.tc,sh=isShiny(),d=pkDifficulty(fam,id,getIv(),tc,sh);
     $("pkIvBox").hidden=sh;$("pkShinyNote").hidden=!sh;
     $("pkDiff").innerHTML=`<div>Rareté de ${esc(m.fr)} : ${rBadge(m.r)}</div><div>Difficulté estimée : <b style="color:${d.color}">${d.label}</b></div><div class="bar"><i style="width:${d.pct}%;background:${d.color}"></i></div>
-      <span class="hint">Calculée avec la rareté (la forme la plus facile à trouver de la famille jusqu'à ce Pokémon), ${sh?"le shiny":"les IV demandés"}${tc?" et le talent caché (TC), qui augmente pas mal la difficulté":""}.</span>`;};
+      <span class="hint">Calculée avec la rareté (la forme la plus facile à trouver de la famille jusqu'à ce Pokémon, une forme régionale ne comptant qu'avec sa propre lignée), ${sh?"le shiny":"les IV demandés"}${tc?" et le talent caché (TC), qui augmente pas mal la difficulté":""}.</span>`;};
   $("pkMon").onchange=()=>{syncAb();syncDiff()};$("pkAb").onchange=syncDiff;$("pkShiny").onchange=()=>{syncDiff();sfx(isShiny()?"add":"click")};
   $("pkF").addEventListener("input",e=>{if(e.target.dataset.iv!==undefined){paintIv();syncDiff()}});
   $("pkF").addEventListener("click",e=>{const b=e.target.closest("[data-iv31],[data-ivall]");if(!b)return;

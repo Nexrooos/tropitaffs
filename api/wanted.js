@@ -12,14 +12,16 @@ for (const fam of FAMILIES) for (const m of fam) { BY_ID.set(m.id, m); FAM_OF.se
 const RAR = { common: "Commun", uncommon: "Peu commun", rare: "Rare", "ultra-rare": "Ultra-rare", none: "Pas d'apparition (évolution, œuf ou fossile)" };
 const RPTS = { common: 0, uncommon: 1, rare: 2, "ultra-rare": 3, none: 2 };
 const STATS = ["PV", "Attaque", "Défense", "Atq. Spé.", "Déf. Spé.", "Vitesse"];
-const ivPoints = (iv) => Math.min(5, [0, 1, 1, 2, 3, 4, 5][iv.filter((v) => v === 31).length] + (iv.some((v) => v >= 25 && v < 31) ? 1 : 0));
+const ivPoints = (iv) => Math.min(5, [0, 1, 2, 3, 4, 5, 5][iv.filter((v) => v === 31).length] + (iv.some((v) => v >= 25 && v < 31) ? 1 : 0));
 const DIFF = [[1, "Facile"], [3, "Moyen"], [5, "Difficile"], [7, "Très difficile"], [99, "Extrême"]];
 const SHINY_PTS = 4;
 const rKey = (r) => r.replace("*", "");
 const rLabel = (r) => (RAR[rKey(r)] || RAR.none) + (r.endsWith("*") ? " (Poké Snack)" : "");
 function difficulty(id, iv, tc, shiny) {
   const fam = FAM_OF.get(id), i = fam.findIndex((m) => m.id === id);
-  const pts = Math.min(...fam.slice(0, i + 1).map((m) => RPTS[rKey(m.r)])) + (shiny ? SHINY_PTS : ivPoints(iv)) + (tc ? 2 : 0);
+  // Une forme régionale (ou une race de Tauros) ne s'obtient pas depuis la forme normale : on ne compare qu'avec sa propre lignée
+  const form = (x) => (x.reg ? x.id.split("-").slice(1).join("-") : "");
+  const pts = Math.min(...fam.slice(0, i + 1).filter((m) => form(m) === form(fam[i])).map((m) => RPTS[rKey(m.r)])) + (shiny ? SHINY_PTS : ivPoints(iv)) + (tc ? 2 : 0);
   return DIFF.find((d) => pts <= d[0])[1];
 }
 
