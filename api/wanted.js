@@ -18,10 +18,11 @@ const SHINY_PTS = 4;
 const rKey = (r) => r.replace("*", "");
 const rLabel = (r) => (RAR[rKey(r)] || RAR.none) + (r.endsWith("*") ? " (Poké Snack)" : "");
 function difficulty(id, iv, tc, shiny) {
-  const fam = FAM_OF.get(id), i = fam.findIndex((m) => m.id === id);
-  // Une forme régionale (ou une race de Tauros) ne s'obtient pas depuis la forme normale : on ne compare qu'avec sa propre lignée
-  const form = (x) => (x.reg ? x.id.split("-").slice(1).join("-") : "");
-  const pts = Math.min(...fam.slice(0, i + 1).filter((m) => form(m) === form(fam[i])).map((m) => RPTS[rKey(m.r)])) + (shiny ? SHINY_PTS : ivPoints(iv)) + (tc ? 2 : 0);
+  // Rareté la plus facile parmi le Pokémon et ses vraies pré-évolutions (champ p), ex. Perrserker <- Miaouss de Galar
+  const fam = FAM_OF.get(id);
+  let m = fam.find((x) => x.id === id), easiest = 99;
+  for (let k = 0; m && k < 5; k++) { easiest = Math.min(easiest, RPTS[rKey(m.r)]); m = m.p && fam.find((x) => x.id === m.p); }
+  const pts = easiest + (shiny ? SHINY_PTS : ivPoints(iv)) + (tc ? 2 : 0);
   return DIFF.find((d) => pts <= d[0])[1];
 }
 

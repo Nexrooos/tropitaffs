@@ -132,6 +132,28 @@ for root, members in fams.items():
             mons.append({'id': f"{n}-{reg}" + (f"-{breed}" if breed else ''), 'n': n, 'fr': name, 'en': f"{d['name']} {fm.get('name')}",
                          'ab': fnormal, 'tc': fhidden[0] if fhidden else None, 'r': rarity(fk), 'reg': 1})
     out.append(mons)
+# Pré-évolution réelle de chaque entrée (champ 'p'), d'après preEvolution de Cobblemon :
+# ex. Perrserker vient de Miaouss de Galar, Raichu d'Alola vient du Pikachu normal.
+ids = {m['id'] for fam in out for m in fam}
+def pre_id(s, fallback_reg=None):
+    if not s: return None
+    parts = str(s).split(); k = norm(parts[0])
+    if k not in species: return None
+    n = species[k]['nationalPokedexNumber']
+    reg = next((t for t in parts[1:] if t in REGIONAL), None) or fallback_reg
+    if reg and f"{n}-{reg}" in ids: return f"{n}-{reg}"
+    return str(n) if str(n) in ids else None
+for fam in out:
+    for m in fam:
+        k = norm(m['en'].split(' ')[0]) if not m.get('reg') else None
+        n = m['n']; d = next(v for v in species.values() if v['nationalPokedexNumber'] == n)
+        if not m.get('reg'):
+            pid = pre_id(d.get('preEvolution'))
+        else:
+            reg = m['id'].split('-')[1]
+            fm = next((f for f in d.get('forms', []) if reg in f.get('aspects', [])), {})
+            pid = pre_id(fm['preEvolution']) if 'preEvolution' in fm else (pre_id(d.get('preEvolution'), reg) if d.get('preEvolution') else None)
+        if pid and pid != m['id']: m['p'] = pid
 out.sort(key=lambda fam: min(m['n'] for m in fam))
 json.dump(out, open(OUT, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
 print('familles', len(out), 'pokemon', sum(len(f) for f in out), 'talents non traduits', sorted(missing_ab))
