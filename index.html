@@ -744,7 +744,7 @@ function wRenderMine(){
   const s=$("wSeen");if(s)s.onclick=()=>{try{localStorage.setItem("tt_seen",String(Date.now()))}catch{};wRenderMine();sfx("click")};
   box.querySelectorAll("button[data-mc]").forEach(b=>b.onclick=async()=>{
     if(b.dataset.confirm!=="1"){b.dataset.confirm="1";b.textContent="Confirmer l'annulation ?";b.style.background="#f8c8c4";return}
-    b.disabled=true;try{MINE=(await wCall({action:"cancel",id:b.dataset.mc})).mine.filter(w=>w.status!=="cancelled");sfx("down");wRenderMine()}catch(e){sfx("err");b.disabled=false;b.textContent=e.message}});
+    b.disabled=true;try{MINE=(await wCall({action:"cancel",id:b.dataset.mc})).mine.filter(w=>w.status!=="cancelled"&&w.status!=="removed");sfx("down");wRenderMine()}catch(e){sfx("err");b.disabled=false;b.textContent=e.message}});
 }
 function updateBadge(n){const nm=$("navMine");nm.dataset.n=n||"";const a=document.querySelector("#me .me");if(!a)return;let d=a.querySelector(".notif");if(n&&!d){d=document.createElement("span");d.className="notif";a.appendChild(d)}if(d){if(n){d.textContent=n;a.href="#pkMine";a.title="Du nouveau sur tes demandes de Pokémon"}else d.remove()}}
 
@@ -762,7 +762,7 @@ async function wLoadSales(){try{SALES=(await wCall({action:"sales"})).sales;wRen
 async function wLoad(){
   wLoadSales();
   if(!user){WREQ=null;MINE=null;wRenderTeam();wRenderMine();return}
-  try{MINE=(await wCall({action:"mine"})).mine.filter(w=>w.status!=="cancelled")}catch(e){MINE=null}
+  try{MINE=(await wCall({action:"mine"})).mine.filter(w=>w.status!=="cancelled"&&w.status!=="removed")}catch(e){MINE=null}
   wRenderMine();
   try{WREQ=(await wCall({action:"list"})).requests}catch(e){WREQ=null}
   wRenderTeam();
