@@ -7,6 +7,9 @@
 //  - 2 baies dans le snack : +5 IV chacune sur une stat au choix (+10 sur une stat, ou +5 sur deux)
 //    baies à 300 $ la shulker de 1 728 (prix TropiTaffs)
 //  - talent caché : 10 % avec le boost TC, 0 % sans ; chaque boost coûte 11 150 $ l'heure (1 h minimum)
+//  - À AJOUTER : baies d'attraction (Pokémon à forte stat ciblée) ≈ ×2 sur la part du Pokémon
+//    (test Hippopotas 27/11/2026 : cachette à 13 % sans baies, ~24 % constatés avec, 216 snacks en 1 h)
+//  - À AJOUTER : cachettes comme spot de farm (taux d'apparition direct, ex. Hippopotas 13 %)
 //  - une plateforme vide une shulker de snacks (432) en 1 h environ
 (function (root) {
   const FARINE_STACK = 373, SNACK = FARINE_STACK / 64, SPAWNS = 9, PER_HOUR = 432, BOOST = 11150, TC_RATE = 0.1;
