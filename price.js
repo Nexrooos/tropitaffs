@@ -4,10 +4,13 @@
 //  - 1 snack = 9 apparitions ; répartition des raretés au snack : 83,25 / 11,25 / 4,125 / 1,375 %
 //  - on farme dans le meilleur habitat (poids du wiki Tropimon), sinon part médiane de la rareté
 //  - IV tirés au hasard de 0 à 31 ; boost IV = +10 points répartis au hasard sur les stats (max 31)
-//  - talent caché : 10 % avec le boost TC, 0 % sans ; chaque boost coûte 11 150 $ l'heure
+//  - 2 baies dans le snack : +5 IV chacune sur une stat au choix (+10 sur une stat, ou +5 sur deux)
+//    baies à 300 $ la shulker de 1 728 (prix TropiTaffs)
+//  - talent caché : 10 % avec le boost TC, 0 % sans ; chaque boost coûte 11 150 $ l'heure (1 h minimum)
 //  - une plateforme vide une shulker de snacks (432) en 1 h environ
 (function (root) {
   const FARINE_STACK = 373, SNACK = FARINE_STACK / 64, SPAWNS = 9, PER_HOUR = 432, BOOST = 11150, TC_RATE = 0.1;
+  const BERRY = 300 / 1728, BERRIES_PER_SNACK = 2;
   const SHARE = { c: 0.8325, u: 0.1125, r: 0.04125, x: 0.01375 };
   const RMAP = { common: "c", uncommon: "u", rare: "r", "ultra-rare": "x" };
 
@@ -22,9 +25,25 @@
     rec(10, 0, []);
   })();
   const statP = (req, add) => (32 - Math.max(0, req - add)) / 32;
-  function ivProb(iv, boost) {
-    if (!boost) return iv.reduce((p, v) => p * statP(v, 0), 1);
-    return SPLITS.reduce((s, [a, pr]) => s + pr * iv.reduce((p, v, i) => p * statP(v, a[i]), 1), 0);
+  // Bonus fixes possibles des 2 baies : rien, +10 sur une stat, ou +5 sur deux stats
+  const BERRY_OPTS = [[0, 0, 0, 0, 0, 0]];
+  for (let i = 0; i < 6; i++) { const b = [0, 0, 0, 0, 0, 0]; b[i] = 10; BERRY_OPTS.push(b); }
+  for (let i = 0; i < 6; i++) for (let j = i + 1; j < 6; j++) { const b = [0, 0, 0, 0, 0, 0]; b[i] = 5; b[j] = 5; BERRY_OPTS.push(b); }
+  function ivProbWith(iv, boost, bonus) {
+    if (!boost) return iv.reduce((p, v, i) => p * statP(v, bonus[i]), 1);
+    return SPLITS.reduce((s, [a, pr]) => s + pr * iv.reduce((p, v, i) => p * statP(v, a[i] + bonus[i]), 1), 0);
+  }
+  // Meilleure chance d'obtenir les IV demandés, en choisissant au mieux les baies
+  function ivProb(iv, boost, berries = true) {
+    if (!berries) return ivProbWith(iv, boost, BERRY_OPTS[0]);
+    let best = 0, bonus = BERRY_OPTS[0];
+    for (const b of BERRY_OPTS) { if (b.some((x, i) => x && !iv[i])) continue; const p = ivProbWith(iv, boost, b); if (p > best) { best = p; bonus = b; } }
+    return best;
+  }
+  function bestBerries(iv, boost) {
+    let best = -1, bonus = BERRY_OPTS[0];
+    for (const b of BERRY_OPTS) { if (b.some((x, i) => x && !iv[i])) continue; const p = ivProbWith(iv, boost, b); if (p > best) { best = p; bonus = b; } }
+    return bonus;
   }
 
   let DEF = null;
@@ -52,11 +71,14 @@
     if (!best) return null;
     const opts = [false, true].map((boost) => {
       const p = ivProb(iv, boost) * (tc ? TC_RATE : 1), snacks = best.per / p;
-      const perSnack = SNACK + (boost ? BOOST / PER_HOUR : 0) + (tc ? BOOST / PER_HOUR : 0);
-      return { boost, snacks, cost: snacks * perSnack };
+      const berries = iv.some((v) => v > 0);
+      // Un boost s'achète par heure : on compte au moins 1 h dès qu'il en faut un
+      const nBoosts = (boost ? 1 : 0) + (tc ? 1 : 0), hours = snacks / PER_HOUR;
+      const cost = snacks * (SNACK + (berries ? BERRY * BERRIES_PER_SNACK : 0)) + nBoosts * BOOST * Math.max(1, hours);
+      return { boost, snacks, cost, berries: berries ? bestBerries(iv, boost) : null };
     });
     const o = opts[0].cost <= opts[1].cost ? opts[0] : opts[1];
-    return { boost: o.boost, tc: !!tc, snacks: o.snacks, hours: o.snacks / PER_HOUR, shulkers: o.snacks / 432, price: nice(o.cost), via: best };
+    return { boost: o.boost, berries: o.berries, tc: !!tc, snacks: o.snacks, hours: o.snacks / PER_HOUR, shulkers: o.snacks / 432, price: nice(o.cost), via: best };
   }
 
   const api = { estimate, ivProb, FARINE_STACK };
