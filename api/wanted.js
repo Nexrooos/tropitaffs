@@ -4,6 +4,8 @@
 // Les demandes en cours restent privées (le joueur voit les siennes, l'équipe voit tout).
 // Seules les ventes terminées sont publiques (Pokémon, IV, talent caché, shiny, prix) pour suivre les prix.
 const FAMILIES = require("../data/pokemon.json");
+const HABITATS = require("../data/habitats.json");
+const { estimate } = require("../price.js");
 const { ADMINS, redis, BANNED, BAN_MSG } = require("./_team.js");
 const crypto = require("crypto");
 
@@ -180,6 +182,8 @@ module.exports = async (req, res) => {
     { name: "Talent", value: talent, inline: true },
     { name: "Prix proposé", value: fmt(price), inline: true },
   ];
+  const est = estimate(FAM_OF.get(mon.id), mon.id, iv, isTc, shiny, HABITATS);
+  if (est) fields.push({ name: "Coût estimé du farm", value: `${fmt(est.price)} (≈ ${Math.round(est.snacks).toLocaleString("fr-FR")} snacks${est.boost ? ", boost IV" : ""}${est.tc ? ", boost TC" : ""})${price < est.price ? " · ⚠️ prix proposé en dessous" : ""}`, inline: true });
   if (notes) fields.push({ name: "Précisions", value: notes });
   const ok = await notify(hook, { allowed_mentions: { parse: [] },
     embeds: [{ title: shiny ? "✨ Demande de Pokémon shiny" : "🔎 Demande de Pokémon", color: shiny ? 0xf2b705 : 0x3b6fd8, timestamp: new Date().toISOString(),
