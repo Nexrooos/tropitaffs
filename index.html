@@ -668,7 +668,8 @@ function pkRenderForm(msg){
     $("pkIvBox").hidden=sh;$("pkShinyNote").hidden=!sh;
     $("pkDiff").innerHTML=`<div>Rareté de ${esc(m.fr)} : ${rBadge(m.r)}</div><div>Difficulté estimée : <b style="color:${d.color}">${d.label}</b></div><div class="bar"><i style="width:${d.pct}%;background:${d.color}"></i></div>
       <span class="hint">Calculée avec la rareté (la forme la plus facile à trouver parmi ce Pokémon et ses pré-évolutions), ${sh?"le shiny":"les IV demandés"}${tc?" et le talent caché (TC), qui augmente pas mal la difficulté":""}.</span>${pkCostHtml(fam,id,tc,sh)}`;};
-  const pkCostHtml=(fam,id,tc,sh)=>{const e=window.TTPrice&&TTPrice.estimate(fam,id,getIv(),tc,sh,HAB);if(!e)return sh?`<div class="pkcost"><span class="hint">Pas d'estimation de coût pour les shiny : ça dépend surtout de la chance.</span></div>`:"";
+  const COST_ON=false; // coût estimé du farm désactivé en attendant les données de l'équipe
+  const pkCostHtml=(fam,id,tc,sh)=>{if(!COST_ON)return "";const e=window.TTPrice&&TTPrice.estimate(fam,id,getIv(),tc,sh,HAB);if(!e)return sh?`<div class="pkcost"><span class="hint">Pas d'estimation de coût pour les shiny : ça dépend surtout de la chance.</span></div>`:"";
     const offer=parseInt($("pkPrice").value.replace(/\D/g,""),10),low=offer>0&&offer<e.price,sn=Math.round(e.snacks);
     const dur=e.hours<1?`moins d'1 h`:e.hours<48?`environ ${Math.round(e.hours)} h`:`environ ${Math.round(e.hours/24)} jours non-stop`;
     return `<div class="pkcost${low?" low":""}"><div>Coût estimé du farm : <b>${fmt(e.price)}</b></div>

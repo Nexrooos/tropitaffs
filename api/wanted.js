@@ -182,7 +182,8 @@ module.exports = async (req, res) => {
     { name: "Talent", value: talent, inline: true },
     { name: "Prix proposé", value: fmt(price), inline: true },
   ];
-  const est = estimate(FAM_OF.get(mon.id), mon.id, iv, isTc, shiny, HABITATS);
+  const COST_ON = false; // coût estimé du farm désactivé en attendant les données de l'équipe
+  const est = COST_ON && estimate(FAM_OF.get(mon.id), mon.id, iv, isTc, shiny, HABITATS);
   if (est) fields.push({ name: "Coût estimé du farm", value: `${fmt(est.price)} (≈ ${Math.round(est.snacks).toLocaleString("fr-FR")} snacks${est.boost ? ", boost IV" : ""}${est.tc ? ", boost TC" : ""})${price < est.price ? " · ⚠️ prix proposé en dessous" : ""}`, inline: true });
   if (notes) fields.push({ name: "Précisions", value: notes });
   const ok = await notify(hook, { allowed_mentions: { parse: [] },
