@@ -64,7 +64,9 @@ def depth(k, seen=()):
 
 # Rareté d'apparition dans la nature (meilleure rareté parmi les apparitions normales, forme de base)
 ORDER = ['common', 'uncommon', 'rare', 'ultra-rare']
-best, snack_only = {}, {}
+best, snack_only, struct_only = {}, {}, {}
+# Apparitions limitées à une structure (village, ruines, pyramide...) : ne comptent que s'il n'y a rien d'autre
+STRUCT = {'urban','mansion','mansion_dining','mansion_bedrooms','trail_ruins','derelict','jungle_pyramid','desert_pyramid','ocean_ruins','ocean_monument','nether_structures','illager_structures','ancient_city','ruined_portal','nether_fossil','pillager_outpost','end_city','stronghold'}
 for f in glob.glob(SPAWN + '/**/*.json', recursive=True):
     d = json.load(open(f, encoding='utf-8'))
     if d.get('enabled') is False: continue
@@ -77,13 +79,13 @@ for f in glob.glob(SPAWN + '/**/*.json', recursive=True):
         if reg:
             breed = [t.split('=')[1] for t in parts[1:] if t.startswith('bull_breed=')]
             k = k + '|' + reg[0] + ('|' + breed[0] if breed else '')
-        target = snack_only if (sp.get('condition') or {}).get('isPokeSnack') else best
+        target = snack_only if (sp.get('condition') or {}).get('isPokeSnack') else struct_only if STRUCT & set(sp.get('presets', [])) else best
         if k not in target or ORDER.index(sp['bucket']) < ORDER.index(target[k]): target[k] = sp['bucket']
     # Troupeaux (Cobblemon 1.8) : apparitions naturelles en groupe. Un membre minoritaire du troupeau
     # (moins de 25 % du poids) compte un cran plus rare que le troupeau lui-même.
     for sp in d.get('spawns', []):
         if sp.get('type') != 'pokemon-herd' or sp.get('bucket') not in ORDER: continue
-        if (sp.get('condition') or {}).get('isPokeSnack'): continue
+        if (sp.get('condition') or {}).get('isPokeSnack') or STRUCT & set(sp.get('presets', [])): continue
         members = sp.get('herdablePokemon') or []
         tot = sum(m.get('weight', 1) for m in members) or 1
         for m in members:
@@ -97,17 +99,21 @@ for f in glob.glob(SPAWN + '/**/*.json', recursive=True):
             lvl = min(len(ORDER) - 1, ORDER.index(sp['bucket']) + (1 if m.get('weight', 1) / tot < 0.25 else 0))
             if k not in best or lvl < ORDER.index(best[k]): best[k] = ORDER[lvl]
 # Corrections d'après le terrain sur Tropimon (prioritaires sur les fichiers de Cobblemon)
-OVERRIDE = {'tauros|paldean|combat': 'uncommon', 'tauros|paldean|blaze': 'rare', 'tauros|paldean|aqua': 'rare'}
+# Fichiers d'apparition propres à Tropimon (spawn_pool_world du serveur, 27/11/2026) : Minidraco et Draco peu communs
+OVERRIDE = {'dratini': 'uncommon', 'dragonair': 'uncommon', 'tauros|paldean|combat': 'uncommon', 'tauros|paldean|blaze': 'rare', 'tauros|paldean|aqua': 'rare'}
 def rarity(k):
     if k in OVERRIDE: return OVERRIDE[k]
-    if '|' in k and k not in best and k not in snack_only:
+    if '|' in k and k not in best and k not in snack_only and k not in struct_only:
         # forme régionale : toutes races confondues si besoin
         cands = [v for kk, v in best.items() if kk.startswith(k)]
+        if cands: return min(cands, key=ORDER.index)
+        cands = [v for kk, v in struct_only.items() if kk.startswith(k)]
         if cands: return min(cands, key=ORDER.index)
         cands = [v for kk, v in snack_only.items() if kk.startswith(k)]
         if cands: return min(cands, key=ORDER.index) + '*'
         return 'none'
     if k in best: return best[k]
+    if k in struct_only: return struct_only[k]
     if k in snack_only: return snack_only[k] + '*'
     return 'none'
 
